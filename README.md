@@ -1,3 +1,15 @@
+# qlcert
+
+Fork projektu [mkcert](https://github.com/FiloSottile/mkcert) dostosowywany do lokalnego laboratorium LAN.
+
+Cel projektu:
+- uproszczenie pracy z lokalnymi certyfikatami HTTPS,
+- generowanie certyfikatów dla usług wewnętrznych,
+- testy lokalnego CA,
+- zastosowania edukacyjne i laboratoryjne.
+
+Projekt bazuje na mkcert i zachowuje oryginalną licencję BSD-3-Clause.
+
 # mkcert
 
 mkcert is a simple tool for making locally-trusted development certificates. It requires no configuration.
