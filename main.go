@@ -169,11 +169,47 @@ type mkcert struct {
 }
 
 func (m *mkcert) Run(args []string) {
+	if !m.uninstallMode {
+		if len(args) == 0 && m.csrPath == "" && !m.installMode {
+			flag.Usage()
+			return
+		}
+		hostnameRegexp := regexp.MustCompile(`(?i)^(\*\.)?[0-9a-z_-]([0-9a-z._-]*[0-9a-z_-])?$`)
+		for i, name := range args {
+			if ip := net.ParseIP(name); ip != nil {
+				continue
+			}
+			if email, err := mail.ParseAddress(name); err == nil && email.Address == name {
+				continue
+			}
+			if uriName, err := url.Parse(name); err == nil && uriName.Scheme != "" && uriName.Host != "" {
+				continue
+			}
+			punycode, err := idna.ToASCII(name)
+			if err != nil {
+				log.Fatalf("ERROR: %q is not a valid hostname, IP, URL or email: %s", name, err)
+			}
+			args[i] = punycode
+			if !hostnameRegexp.MatchString(punycode) {
+				log.Fatalf("ERROR: %q is not a valid hostname, IP, URL or email", name)
+			}
+		}
+	}
+	var csr *x509.CertificateRequest
+	if m.csrPath != "" && !m.uninstallMode {
+		csr = readCSR(m.csrPath)
+	}
+
 	m.CAROOT = getCAROOT()
 	if m.CAROOT == "" {
 		log.Fatalln("ERROR: failed to find the default CA location, set one as the CAROOT env var")
 	}
-	fatalIfErr(os.MkdirAll(m.CAROOT, 0755), "failed to create the CAROOT")
+	if !m.uninstallMode {
+		fatalIfErr(os.MkdirAll(m.CAROOT, 0755), "failed to create the CAROOT")
+		if !pathExists(filepath.Join(m.CAROOT, rootName)) {
+			m.newCA()
+		}
+	}
 	m.loadCA()
 
 	if m.installMode {
@@ -204,34 +240,8 @@ func (m *mkcert) Run(args []string) {
 	}
 
 	if m.csrPath != "" {
-		m.makeCertFromCSR()
+		m.makeCertFromCSR(csr)
 		return
-	}
-
-	if len(args) == 0 {
-		flag.Usage()
-		return
-	}
-
-	hostnameRegexp := regexp.MustCompile(`(?i)^(\*\.)?[0-9a-z_-]([0-9a-z._-]*[0-9a-z_-])?$`)
-	for i, name := range args {
-		if ip := net.ParseIP(name); ip != nil {
-			continue
-		}
-		if email, err := mail.ParseAddress(name); err == nil && email.Address == name {
-			continue
-		}
-		if uriName, err := url.Parse(name); err == nil && uriName.Scheme != "" && uriName.Host != "" {
-			continue
-		}
-		punycode, err := idna.ToASCII(name)
-		if err != nil {
-			log.Fatalf("ERROR: %q is not a valid hostname, IP, URL or email: %s", name, err)
-		}
-		args[i] = punycode
-		if !hostnameRegexp.MatchString(punycode) {
-			log.Fatalf("ERROR: %q is not a valid hostname, IP, URL or email", name)
-		}
 	}
 
 	m.makeCert(args)

@@ -199,12 +199,8 @@ func randomSerialNumber() *big.Int {
 	return serialNumber
 }
 
-func (m *mkcert) makeCertFromCSR() {
-	if m.caKey == nil {
-		log.Fatalln("ERROR: can't create new certificates because the CA key (rootCA-key.pem) is missing")
-	}
-
-	csrPEMBytes, err := ioutil.ReadFile(m.csrPath)
+func readCSR(path string) *x509.CertificateRequest {
+	csrPEMBytes, err := ioutil.ReadFile(path)
 	fatalIfErr(err, "failed to read the CSR")
 	csrPEM, _ := pem.Decode(csrPEMBytes)
 	if csrPEM == nil {
@@ -217,6 +213,13 @@ func (m *mkcert) makeCertFromCSR() {
 	csr, err := x509.ParseCertificateRequest(csrPEM.Bytes)
 	fatalIfErr(err, "failed to parse the CSR")
 	fatalIfErr(csr.CheckSignature(), "invalid CSR signature")
+	return csr
+}
+
+func (m *mkcert) makeCertFromCSR(csr *x509.CertificateRequest) {
+	if m.caKey == nil {
+		log.Fatalln("ERROR: can't create new certificates because the CA key (rootCA-key.pem) is missing")
+	}
 
 	expiration := time.Now().AddDate(2, 3, 0)
 	tpl := &x509.Certificate{
@@ -271,12 +274,8 @@ func (m *mkcert) makeCertFromCSR() {
 	log.Printf("It will expire on %s 🗓\n\n", expiration.Format("2 January 2006"))
 }
 
-// loadCA will load or create the CA at CAROOT.
+// loadCA only reads the existing CA at CAROOT; creation is decided by Run.
 func (m *mkcert) loadCA() {
-	if !pathExists(filepath.Join(m.CAROOT, rootName)) {
-		m.newCA()
-	}
-
 	certPEMBlock, err := ioutil.ReadFile(filepath.Join(m.CAROOT, rootName))
 	fatalIfErr(err, "failed to read the CA certificate")
 	certDERBlock, _ := pem.Decode(certPEMBlock)
