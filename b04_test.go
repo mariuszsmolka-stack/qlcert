@@ -86,7 +86,7 @@ func TestB04RejectedOperationsDoNotCreateCA(t *testing.T) {
 		{name: "invalid_ipv6", args: []string{"2001:db8::zz"}, wantExit: 1, wantOutput: "not a valid hostname"},
 		{name: "mixed_names", args: []string{"localhost", "bad name"}, wantExit: 1, wantOutput: "not a valid hostname"},
 		{name: "install_with_invalid_name", args: []string{"-install", "bad name"}, wantExit: 1, wantOutput: "not a valid hostname"},
-		{name: "missing_names", args: []string{"-ecdsa"}, wantOutput: "Usage of mkcert"},
+		{name: "missing_names", args: []string{"-ecdsa"}, wantOutput: "QuestLab Cert"},
 		{name: "unknown_flag", args: []string{"-unknown"}, wantExit: 2, wantOutput: "flag provided but not defined"},
 		{name: "conflicting_flags", args: []string{"-install", "-uninstall"}, wantExit: 1, wantOutput: "can't set -install and -uninstall"},
 		{name: "missing_csr", args: []string{"-csr", "missing.csr"}, wantExit: 1, wantOutput: "failed to read the CSR"},

@@ -49,7 +49,7 @@ func init() {
 
 func (m *mkcert) makeCert(hosts []string) {
 	if m.caKey == nil {
-		log.Fatalln("ERROR: can't create new certificates because the CA key (rootCA-key.pem) is missing")
+		log.Fatalln(tr("ERROR: can't create new certificates because the CA key (rootCA-key.pem) is missing"))
 	}
 
 	priv, err := m.generateKey(false)
@@ -126,31 +126,31 @@ func (m *mkcert) makeCert(hosts []string) {
 
 	if !m.pkcs12 {
 		if certFile == keyFile {
-			log.Printf("\nThe certificate and key are at \"%s\" ✅\n\n", certFile)
+			log.Printf(tr("\nThe certificate and key are at \"%s\" ✅\n\n"), certFile)
 		} else {
-			log.Printf("\nThe certificate is at \"%s\" and the key at \"%s\" ✅\n\n", certFile, keyFile)
+			log.Printf(tr("\nThe certificate is at \"%s\" and the key at \"%s\" ✅\n\n"), certFile, keyFile)
 		}
 	} else {
-		log.Printf("\nThe PKCS#12 bundle is at \"%s\" ✅\n", p12File)
-		log.Printf("\nThe legacy PKCS#12 encryption password is the often hardcoded default \"changeit\" ℹ️\n\n")
+		log.Printf(tr("\nThe PKCS#12 bundle is at \"%s\" ✅\n"), p12File)
+		log.Printf("%s", tr("\nThe legacy PKCS#12 encryption password is the often hardcoded default \"changeit\" ℹ️\n\n"))
 	}
 
-	log.Printf("It will expire on %s 🗓\n\n", expiration.Format("2 January 2006"))
+	log.Printf(tr("It will expire on %s 🗓\n\n"), displayDate(expiration))
 }
 
 func (m *mkcert) printHosts(hosts []string) {
 	secondLvlWildcardRegexp := regexp.MustCompile(`(?i)^\*\.[0-9a-z_-]+$`)
-	log.Printf("\nCreated a new certificate valid for the following names 📜")
+	log.Printf("%s", tr("\nCreated a new certificate valid for the following names 📜"))
 	for _, h := range hosts {
 		log.Printf(" - %q", h)
 		if secondLvlWildcardRegexp.MatchString(h) {
-			log.Printf("   Warning: many browsers don't support second-level wildcards like %q ⚠️", h)
+			log.Printf(tr("   Warning: many browsers don't support second-level wildcards like %q ⚠️"), h)
 		}
 	}
 
 	for _, h := range hosts {
 		if strings.HasPrefix(h, "*.") {
-			log.Printf("\nReminder: X.509 wildcards only go one level deep, so this won't match a.b.%s ℹ️", h[2:])
+			log.Printf(tr("\nReminder: X.509 wildcards only go one level deep, so this won't match a.b.%s ℹ️"), h[2:])
 			break
 		}
 	}
@@ -204,11 +204,11 @@ func readCSR(path string) *x509.CertificateRequest {
 	fatalIfErr(err, "failed to read the CSR")
 	csrPEM, _ := pem.Decode(csrPEMBytes)
 	if csrPEM == nil {
-		log.Fatalln("ERROR: failed to read the CSR: unexpected content")
+		log.Fatalln(tr("ERROR: failed to read the CSR: unexpected content"))
 	}
 	if csrPEM.Type != "CERTIFICATE REQUEST" &&
 		csrPEM.Type != "NEW CERTIFICATE REQUEST" {
-		log.Fatalln("ERROR: failed to read the CSR: expected CERTIFICATE REQUEST, got " + csrPEM.Type)
+		log.Fatalln(tr("ERROR: failed to read the CSR: expected CERTIFICATE REQUEST, got ") + csrPEM.Type)
 	}
 	csr, err := x509.ParseCertificateRequest(csrPEM.Bytes)
 	fatalIfErr(err, "failed to parse the CSR")
@@ -218,7 +218,7 @@ func readCSR(path string) *x509.CertificateRequest {
 
 func (m *mkcert) makeCertFromCSR(csr *x509.CertificateRequest) {
 	if m.caKey == nil {
-		log.Fatalln("ERROR: can't create new certificates because the CA key (rootCA-key.pem) is missing")
+		log.Fatalln(tr("ERROR: can't create new certificates because the CA key (rootCA-key.pem) is missing"))
 	}
 
 	expiration := time.Now().AddDate(2, 3, 0)
@@ -269,9 +269,9 @@ func (m *mkcert) makeCertFromCSR(csr *x509.CertificateRequest) {
 
 	m.printHosts(hosts)
 
-	log.Printf("\nThe certificate is at \"%s\" ✅\n\n", certFile)
+	log.Printf(tr("\nThe certificate is at \"%s\" ✅\n\n"), certFile)
 
-	log.Printf("It will expire on %s 🗓\n\n", expiration.Format("2 January 2006"))
+	log.Printf(tr("It will expire on %s 🗓\n\n"), displayDate(expiration))
 }
 
 // loadCA only reads the existing CA at CAROOT; creation is decided by Run.
@@ -280,7 +280,7 @@ func (m *mkcert) loadCA() {
 	fatalIfErr(err, "failed to read the CA certificate")
 	certDERBlock, _ := pem.Decode(certPEMBlock)
 	if certDERBlock == nil || certDERBlock.Type != "CERTIFICATE" {
-		log.Fatalln("ERROR: failed to read the CA certificate: unexpected content")
+		log.Fatalln(tr("ERROR: failed to read the CA certificate: unexpected content"))
 	}
 	m.caCert, err = x509.ParseCertificate(certDERBlock.Bytes)
 	fatalIfErr(err, "failed to parse the CA certificate")
@@ -293,7 +293,7 @@ func (m *mkcert) loadCA() {
 	fatalIfErr(err, "failed to read the CA key")
 	keyDERBlock, _ := pem.Decode(keyPEMBlock)
 	if keyDERBlock == nil || keyDERBlock.Type != "PRIVATE KEY" {
-		log.Fatalln("ERROR: failed to read the CA key: unexpected content")
+		log.Fatalln(tr("ERROR: failed to read the CA key: unexpected content"))
 	}
 	m.caKey, err = x509.ParsePKCS8PrivateKey(keyDERBlock.Bytes)
 	fatalIfErr(err, "failed to parse the CA key")
@@ -352,7 +352,7 @@ func (m *mkcert) newCA() {
 		&pem.Block{Type: "CERTIFICATE", Bytes: cert}), 0644)
 	fatalIfErr(err, "failed to save CA certificate")
 
-	log.Printf("Created a new local CA 💥\n")
+	log.Printf("%s", tr("Created a new local CA 💥\n"))
 }
 
 func (m *mkcert) caUniqueName() string {

@@ -92,12 +92,12 @@ func (m *mkcert) installNSS() bool {
 		out, err := execCertutil(cmd)
 		fatalIfCmdErr(err, "certutil -A -d "+profile, out)
 	}) == 0 {
-		log.Printf("ERROR: no %s security databases found", NSSBrowsers)
+		log.Printf(tr("ERROR: no %s security databases found"), tr(NSSBrowsers))
 		return false
 	}
 	if !m.checkNSS() {
-		log.Printf("Installing in %s failed. Please report the issue with details about your environment at https://github.com/FiloSottile/mkcert/issues/new 👎", NSSBrowsers)
-		log.Printf("Note that if you never started %s, you need to do that at least once.", NSSBrowsers)
+		log.Printf(tr("Installing in %s failed. Please report the issue with details about your environment at https://github.com/FiloSottile/mkcert/issues/new 👎"), tr(NSSBrowsers))
+		log.Printf(tr("Note that if you never started %s, you need to do that at least once."), tr(NSSBrowsers))
 		return false
 	}
 	return true

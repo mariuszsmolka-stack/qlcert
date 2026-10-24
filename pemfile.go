@@ -45,15 +45,15 @@ func writePEMFiles(files ...pemFile) (err error) {
 				continue
 			}
 			if statErr != nil {
-				err = errors.Join(err, fmt.Errorf("cannot check incomplete PEM file %q for cleanup: %w", file.path, statErr))
+				err = errors.Join(err, fmt.Errorf(tr("cannot check incomplete PEM file %q for cleanup: %w"), file.path, statErr))
 				continue
 			}
 			if !os.SameFile(file.info, info) {
-				err = errors.Join(err, fmt.Errorf("PEM target %q changed; refusing to remove it during cleanup", file.path))
+				err = errors.Join(err, fmt.Errorf(tr("PEM target %q changed; refusing to remove it during cleanup"), file.path))
 				continue
 			}
 			if removeErr := os.Remove(file.path); removeErr != nil {
-				err = errors.Join(err, fmt.Errorf("failed to remove incomplete PEM file %q: %w", file.path, removeErr))
+				err = errors.Join(err, fmt.Errorf(tr("failed to remove incomplete PEM file %q: %w"), file.path, removeErr))
 			}
 		}
 	}()
@@ -62,20 +62,20 @@ func writePEMFiles(files ...pemFile) (err error) {
 		f, openErr := os.OpenFile(file.path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, file.mode)
 		if openErr != nil {
 			if os.IsExist(openErr) {
-				return fmt.Errorf("refusing to overwrite existing PEM target %q: %w", file.path, openErr)
+				return fmt.Errorf(tr("refusing to overwrite existing PEM target %q: %w"), file.path, openErr)
 			}
-			return fmt.Errorf("failed to create PEM file %q: %w", file.path, openErr)
+			return fmt.Errorf(tr("failed to create PEM file %q: %w"), file.path, openErr)
 		}
 		info, statErr := f.Stat()
 		if statErr != nil {
 			closeErr := f.Close()
-			return fmt.Errorf("cannot identify newly created PEM file %q; file left in place: %w", file.path, errors.Join(statErr, closeErr))
+			return fmt.Errorf(tr("cannot identify newly created PEM file %q; file left in place: %w"), file.path, errors.Join(statErr, closeErr))
 		}
 		created = append(created, createdFile{file.path, info})
 		_, writeErr := f.Write(file.data)
 		closeErr := f.Close()
 		if writeErr != nil || closeErr != nil {
-			return fmt.Errorf("failed to save PEM file %q: %w", file.path, errors.Join(writeErr, closeErr))
+			return fmt.Errorf(tr("failed to save PEM file %q: %w"), file.path, errors.Join(writeErr, closeErr))
 		}
 	}
 	return nil
