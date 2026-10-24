@@ -112,15 +112,8 @@ func (m *mkcert) makeCert(hosts []string) {
 		fatalIfErr(err, "failed to encode certificate key")
 		privPEM := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privDER})
 
-		if certFile == keyFile {
-			err = ioutil.WriteFile(keyFile, append(certPEM, privPEM...), 0600)
-			fatalIfErr(err, "failed to save certificate and key")
-		} else {
-			err = ioutil.WriteFile(certFile, certPEM, 0644)
-			fatalIfErr(err, "failed to save certificate")
-			err = ioutil.WriteFile(keyFile, privPEM, 0600)
-			fatalIfErr(err, "failed to save certificate key")
-		}
+		err = writeCertAndKeyPEM(certFile, keyFile, certPEM, privPEM)
+		fatalIfErr(err, "failed to save certificate and key")
 	} else {
 		domainCert, _ := x509.ParseCertificate(cert)
 		pfxData, err := pkcs12.Encode(rand.Reader, priv, domainCert, []*x509.Certificate{m.caCert}, "changeit")
@@ -267,8 +260,8 @@ func (m *mkcert) makeCertFromCSR() {
 	}
 	certFile, _, _ := m.fileNames(hosts)
 
-	err = ioutil.WriteFile(certFile, pem.EncodeToMemory(
-		&pem.Block{Type: "CERTIFICATE", Bytes: cert}), 0644)
+	err = writePEMFiles(pemFile{certFile, pem.EncodeToMemory(
+		&pem.Block{Type: "CERTIFICATE", Bytes: cert}), 0644})
 	fatalIfErr(err, "failed to save certificate")
 
 	m.printHosts(hosts)
