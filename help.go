@@ -5,6 +5,7 @@ Based on mkcert by The mkcert Authors; BSD-3-Clause license (LICENSE, AUTHORS).
 
 Usage: PROGRAM [options] NAME [NAME ...]
 PROGRAM means the name or path of your QuestLab Cert executable.
+Without arguments, or with -lang only, the program opens the console menu.
 
   PROGRAM -install
       Create or load the local CA and install its certificate as trusted.
@@ -25,6 +26,7 @@ Na podstawie mkcert autorstwa The mkcert Authors; licencja BSD-3-Clause (LICENSE
 
 Użycie: PROGRAM [opcje] NAZWA [NAZWA ...]
 PROGRAM oznacza nazwę lub ścieżkę pliku wykonywalnego QuestLab Cert.
+Bez argumentów lub z samym -lang program otwiera menu konsolowe.
 
   PROGRAM -install
       Utwórz lub odczytaj lokalne CA i zainstaluj zaufanie do jego certyfikatu.

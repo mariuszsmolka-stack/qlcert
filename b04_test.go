@@ -34,6 +34,11 @@ func TestB04CLIProcess(t *testing.T) {
 
 func runB04CLI(t *testing.T, root string, args ...string) ([]byte, error) {
 	t.Helper()
+	return runCLIWithInput(t, root, "", args...)
+}
+
+func runCLIWithInput(t *testing.T, root, input string, args ...string) ([]byte, error) {
+	t.Helper()
 	t.Setenv("QUESTLAB_B04_HELPER", "1")
 	t.Setenv("CAROOT", filepath.Join(root, "ca"))
 	// Disable every trust store, including in a regression of the CLI ordering.
@@ -45,6 +50,7 @@ func runB04CLI(t *testing.T, root string, args ...string) ([]byte, error) {
 	}
 	cmd := exec.Command(executable, append([]string{"-test.run=^TestB04CLIProcess$", "--"}, args...)...)
 	cmd.Dir = root
+	cmd.Stdin = strings.NewReader(input)
 	return cmd.CombinedOutput()
 }
 

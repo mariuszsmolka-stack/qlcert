@@ -21,6 +21,18 @@ func tr(message string) string {
 
 // System/library errors and subprocess output remain in their original language.
 var polishMessages = map[string]string{
+	"1. Generate HTTPS certificate": "1. Utwórz certyfikat HTTPS",
+	"2. Help":                       "2. Pomoc",
+	"0. Exit":                       "0. Zakończ",
+	"Choose an option: ":            "Wybierz opcję: ",
+	"Enter one DNS name or IP address (empty to cancel): ":                            "Podaj jedną nazwę DNS lub adres IP (puste pole anuluje): ",
+	"Cancelled. No files were created.":                                               "Anulowano. Nie utworzono żadnych plików.",
+	"Invalid input. Enter a single DNS name or IP address.":                           "Nieprawidłowe dane. Podaj jedną nazwę DNS lub adres IP.",
+	"\nSummary\nDNS/IP: %s\nCertificate: %s\nPrivate key: %s\nFormat: PEM\n":          "\nPodsumowanie\nDNS/IP: %s\nCertyfikat: %s\nKlucz prywatny: %s\nFormat: PEM\n",
+	"A local CA will be created if needed. Trust will not be installed.":              "W razie potrzeby powstanie lokalne CA. Zaufanie nie zostanie zainstalowane.",
+	"Generate the certificate? [y/N]: ":                                               "Utworzyć certyfikat? [t/N]: ",
+	"Invalid option. Choose 1, 2 or 0.":                                               "Nieprawidłowa opcja. Wybierz 1, 2 lub 0.",
+	"failed to read menu input":                                                       "nie udało się odczytać danych wejściowych menu",
 	"Based on mkcert by The mkcert Authors; BSD-3-Clause license (LICENSE, AUTHORS).": "Na podstawie mkcert autorstwa The mkcert Authors; licencja BSD-3-Clause (LICENSE, AUTHORS).",
 	"ERROR: %s: %s": "BŁĄD: %s: %s",
 	"ERROR: failed to execute \"%s\": %s\n\n%s\n":                                                                                              "BŁĄD: nie udało się wykonać \"%s\": %s\n\n%s\n",

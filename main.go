@@ -34,11 +34,11 @@ var Version string
 
 func main() {
 	uiLanguage = "en"
+	log.SetFlags(0)
 	if len(os.Args) == 1 {
-		fmt.Print(helpText(uiLanguage, false))
+		fatalIfErr(runMenu(os.Stdin, os.Stdout), "failed to read menu input")
 		return
 	}
-	log.SetFlags(0)
 	var (
 		languageFlag  = flag.String("lang", "en", "")
 		installFlag   = flag.Bool("install", false, "")
@@ -96,6 +96,16 @@ func main() {
 	}
 	if *csrFlag != "" && flag.NArg() != 0 {
 		log.Fatalln(tr("ERROR: can't specify extra arguments when using -csr"))
+	}
+	onlyLanguage := true
+	flag.Visit(func(option *flag.Flag) {
+		if option.Name != "lang" {
+			onlyLanguage = false
+		}
+	})
+	if onlyLanguage && flag.NArg() == 0 {
+		fatalIfErr(runMenu(os.Stdin, os.Stdout), "failed to read menu input")
+		return
 	}
 	(&mkcert{
 		installMode: *installFlag, uninstallMode: *uninstallFlag, csrPath: *csrFlag,
