@@ -108,3 +108,13 @@ Ta sekcja jest celowo **niezamknięta**; zostanie opracowana na podstawie wpisó
 - **Status:** scalono; nie jest to usunięcie podatności.
 
 <!-- Następny zweryfikowany i scalony zakres otrzymuje nagłówek ### 003 — RRRR-MM-DD — ... na KOŃCU dokumentu. Sam audyt, przed jego scaleniem, pozostaje wyłącznie w rejestrze ustaleń. -->
+
+### 003 — 2026-10-24 — aktualizacja lokalnego środowiska Go do 1.27.3
+
+- **Kategoria:** lokalne środowisko kompilacji / weryfikacja bezpieczeństwa; ustalenie B09.
+- **Stan przed:** lokalne Go 1.27.0; `govulncheck` zgłaszał trzy podatności z osiągalnymi wywołaniami: GO-2026-6809, GO-2026-5970 oraz GO-2026-5026.
+- **Co zrobił QuestLab:** zaktualizowano lokalne środowisko Go z wersji 1.27.0 do 1.27.3.
+- **Kontrole i stan po:** ponowny `govulncheck` zgłasza dwie podatności z osiągalnymi wywołaniami. GO-2026-6809 nie jest już zgłaszana; GO-2026-5970 oraz GO-2026-5026 pozostają otwarte. Skan wykazał dodatkowo 49 zgłoszeń na poziomie modułów bez wskazanych osiągalnych wywołań; nie oznacza to 49 potwierdzonych możliwości zaatakowania aplikacji.
+- **Zakres i pliki:** zmiana Go dotyczy na razie wyłącznie lokalnego środowiska. Nie zmieniono konfiguracji GitHub Actions ani zależności projektu. W tym wpisie aktualizowany jest wyłącznie `docs/DEVELOPMENT_HISTORY.md`.
+- **Commit / PR:** nie wskazano dla aktualizacji lokalnego środowiska.
+- **Status i ograniczenie:** GO-2026-6809 nie jest zgłaszana w ponownym skanie lokalnym. Nie uznajemy jej za usuniętą ze wszystkich przyszłych wydań programu; wymaga to osobnej weryfikacji środowiska kompilacji i wynikowych artefaktów. GO-2026-5970 i GO-2026-5026 pozostają otwarte.
