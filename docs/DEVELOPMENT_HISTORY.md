@@ -131,3 +131,11 @@ Ta sekcja jest celowo **niezamknięta**; zostanie opracowana na podstawie wpisó
 - **PFX:** eksport nadal wymaga osobnych poprawek B01/B02 z etapu 3 roadmapy, w tym usunięcia stałego hasła `changeit` i poprawy parametrów ochrony PKCS#12. Aktualizacja zależności nie zamyka tych ustaleń.
 - **Commit / PR:** nie wykonano commit ani push; nie wskazano PR dla tego wpisu.
 - **Status:** wymagane końcowe kontrole lokalne zakończone powodzeniem. Brak plików testowych nie jest potwierdzeniem pokrycia funkcji testami; nie deklarujemy zakończenia etapu 0 ani weryfikacji wszystkich przyszłych wydań.
+
+### 005 — 2026-10-24 — pierwszy zestaw testów jednostkowych
+
+- **Kategoria:** testy bazowe / częściowa realizacja M01.
+- **Stan przed:** brak plików testowych; `go test` zgłaszał `[no test files]`.
+- **Co zrobił QuestLab:** dodano `cert_test.go` i `main_test.go`: 5 funkcji testowych oraz 29 przypadków table-driven dla `fileNames`, `randomSerialNumber`, `storeEnabled`, `getCAROOT` i `pathExists`. Testy używają `t.TempDir()` i `t.Setenv()`, bez równoległych zmian środowiska, generowania CA i operacji na magazynach zaufania.
+- **Kontrole:** na Windows AMD64 z Go 1.27.3 wykonano `go test -v ./...` — wszystkie przypadki przeszły; `go test -race ./...` — poprawnie, bez wykrytych wyścigów; `go vet ./...` — bez ostrzeżeń. Wszystkie kontrole zwróciły kod 0. Poprawnie zakończyły się również `go mod verify`, kompilacje Windows AMD64 i Linux AMD64 oraz `git diff --check`.
+- **Status i ograniczenia:** zestaw zatwierdzono. Testy wykonano na Windows; Linux sprawdzono wyłącznie przez kompilację krzyżową, bez uruchamiania testów na Linux. Jest to pierwszy zestaw bazowy, bez deklaracji pełnego pokrycia kodu ani zamknięcia M01. Nie zmieniono logiki aplikacji; numery seryjne nadal mogą wynosić zero.
