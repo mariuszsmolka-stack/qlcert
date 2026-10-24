@@ -81,3 +81,32 @@ func TestHTTPSInstructionsBackAndEOF(t *testing.T) {
 		}
 	}
 }
+
+func TestIISInstructionsForGeneratedPFX(t *testing.T) {
+	originalLanguage := uiLanguage
+	t.Cleanup(func() { uiLanguage = originalLanguage })
+	for _, language := range []string{"en", "pl"} {
+		t.Run(language, func(t *testing.T) {
+			uiLanguage = language
+			root := t.TempDir()
+			path := filepath.Join(root, "user's home", "QuestLab-Cert", "certificates", "server.pfx")
+			var output bytes.Buffer
+			printIISInstructions(&output, "server.test", "", "", filepath.Join(root, "ca", rootName), path)
+			for _, want := range []string{path, "-FilePath '" + strings.ReplaceAll(path, "'", "''") + "'", "Modern2023", "-AsSecureString", "NEVER copy"} {
+				if want == "NEVER copy" && language == "pl" {
+					want = "NIGDY nie kopiuj"
+				}
+				if !strings.Contains(output.String(), want) {
+					t.Errorf("PFX instructions omit %q: %s", want, &output)
+				}
+			}
+			warning := "Import into real IIS has not yet been tested"
+			if language == "pl" {
+				warning = "Import na rzeczywistym IIS nie został jeszcze przetestowany"
+			}
+			if !strings.Contains(output.String(), warning) || strings.Contains(output.String(), `C:\Certificates\server.pfx`) || strings.Contains(output.String(), "%!") {
+				t.Error("PFX instructions contain a placeholder path, missing warning or formatting error")
+			}
+		})
+	}
+}

@@ -13,7 +13,7 @@ import (
 )
 
 func runMenu(input io.Reader, output io.Writer) error {
-	scanner := bufio.NewScanner(input)
+	scanner := bufio.NewScanner(menuReader{input})
 	for {
 		fmt.Fprintln(output, "\nQuestLab Cert")
 		fmt.Fprintln(output, tr("1. Generate HTTPS certificate"))
@@ -43,8 +43,26 @@ func runMenu(input io.Reader, output io.Writer) error {
 				fmt.Fprintln(output, tr("Invalid input. Enter a single DNS name or IP address."))
 				continue
 			}
-			m := &mkcert{} // PEM only; never enable installation of trust here.
-			certPath, keyPath, _ := m.fileNames([]string{host})
+			var format string
+			for {
+				fmt.Fprintln(output, tr("1. PEM - Apache / Nginx (default)"))
+				fmt.Fprintln(output, "2. PFX - IIS")
+				fmt.Fprintln(output, tr("0. Back"))
+				fmt.Fprint(output, tr("Choose a format [1]: "))
+				if !scanner.Scan() {
+					return scanner.Err()
+				}
+				format = strings.TrimSpace(scanner.Text())
+				if format == "" || format == "1" || format == "2" || format == "0" {
+					break
+				}
+				fmt.Fprintln(output, tr("Invalid format. Choose 1, 2 or 0."))
+			}
+			if format == "0" {
+				continue
+			}
+			m := &mkcert{pkcs12: format == "2"} // Never install trust from the menu.
+			certPath, keyPath, p12Path := m.fileNames([]string{host})
 			home, err := os.UserHomeDir()
 			if err != nil {
 				return fmt.Errorf(tr("failed to locate the home directory: %w"), err)
@@ -55,7 +73,12 @@ func runMenu(input io.Reader, output io.Writer) error {
 			}
 			m.certFile = filepath.Join(certDir, certPath)
 			m.keyFile = filepath.Join(certDir, keyPath)
-			fmt.Fprintf(output, tr("\nSummary\nDNS/IP: %s\nCertificate: %s\nPrivate key: %s\nFormat: PEM\n"), host, m.certFile, m.keyFile)
+			m.p12File = filepath.Join(certDir, strings.TrimSuffix(filepath.Base(p12Path), ".p12")+".pfx")
+			if m.pkcs12 {
+				fmt.Fprintf(output, tr("\nSummary\nDNS/IP: %s\nBundle: %s\nFormat: PFX (Modern2023)\n"), host, m.p12File)
+			} else {
+				fmt.Fprintf(output, tr("\nSummary\nDNS/IP: %s\nCertificate: %s\nPrivate key: %s\nFormat: PEM\n"), host, m.certFile, m.keyFile)
+			}
 			fmt.Fprintln(output, tr("A local CA will be created if needed. Trust will not be installed."))
 			fmt.Fprint(output, tr("Generate the certificate? [y/N]: "))
 			if !scanner.Scan() {
@@ -66,17 +89,33 @@ func runMenu(input io.Reader, output io.Writer) error {
 				fmt.Fprintln(output, tr("Cancelled. No files were created."))
 				continue
 			}
-			if err := os.MkdirAll(certDir, 0700); err != nil {
-				return fmt.Errorf(tr("failed to create certificate directory %q: %w"), certDir, err)
-			}
-			m.Run([]string{host})
-			if err := showHTTPSInstructions(scanner, output, host, m.certFile, m.keyFile, filepath.Join(m.CAROOT, rootName)); err != nil {
+			m.run([]string{host}, certDir)
+			if m.pkcs12 {
+				fmt.Fprint(output, tr("Show IIS HTTPS instructions? [y/N]: "))
+				if !scanner.Scan() {
+					return scanner.Err()
+				}
+				switch strings.ToLower(strings.TrimSpace(scanner.Text())) {
+				case "y", "yes", "t", "tak":
+					printIISInstructions(output, host, "", "", filepath.Join(m.CAROOT, rootName), m.p12File)
+				}
+			} else if err := showHTTPSInstructions(scanner, output, host, m.certFile, m.keyFile, filepath.Join(m.CAROOT, rootName)); err != nil {
 				return err
 			}
 		default:
 			fmt.Fprintln(output, tr("Invalid option. Choose 1, 2 or 0."))
 		}
 	}
+}
+
+// Scanner must not read ahead into the password later read from the terminal.
+type menuReader struct{ io.Reader }
+
+func (r menuReader) Read(p []byte) (int, error) {
+	if len(p) > 1 {
+		p = p[:1]
+	}
+	return r.Reader.Read(p)
 }
 
 func showHTTPSInstructions(scanner *bufio.Scanner, output io.Writer, host, certPath, keyPath, caPath string) error {
@@ -94,7 +133,7 @@ func showHTTPSInstructions(scanner *bufio.Scanner, output io.Writer, host, certP
 		case "2":
 			printNginxInstructions(output, host, certPath, keyPath, caPath)
 		case "3":
-			printIISInstructions(output, host, certPath, keyPath, caPath)
+			printIISInstructions(output, host, certPath, keyPath, caPath, "")
 		case "4":
 			return nil
 		default:

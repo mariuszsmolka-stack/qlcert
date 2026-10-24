@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/x509"
 	"errors"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -35,14 +37,19 @@ func TestMenuDoesNotWriteBeforeConfirmation(t *testing.T) {
 		{name: "multiple_names", input: "1\none.test two.test\n0\n", want: "Invalid input."},
 		{name: "email_is_not_dns", input: "1\nuser@example.test\n0\n", want: "Invalid input."},
 		{name: "url_is_not_dns", input: "1\nhttps://example.test\n0\n", want: "Invalid input."},
-		{name: "cancel", input: "1\nlocalhost\nn\n0\n", want: "Cancelled."},
-		{name: "default_no", input: "1\nlocalhost\n\n0\n", want: "Cancelled."},
+		{name: "cancel", input: "1\nlocalhost\n\nn\n0\n", want: "Cancelled."},
+		{name: "default_no", input: "1\nlocalhost\n\n\n0\n", want: "Cancelled."},
 		{name: "eof_at_name", input: "1\n", want: "Enter one DNS"},
-		{name: "eof_at_confirmation", input: "1\nlocalhost\n", want: "Generate the certificate?"},
-		{name: "ipv4_summary", input: "1\n192.0.2.1\nn\n0\n", want: "DNS/IP: 192.0.2.1"},
-		{name: "ipv6_summary", input: "1\n2001:db8::1\nn\n0\n", want: "2001_db8__1.pem"},
-		{name: "international_dns", input: "1\nbücher.example\nn\n0\n", want: "DNS/IP: xn--bcher-kva.example"},
-		{name: "polish_cancel_existing", args: []string{"-lang=pl"}, input: "1\nlocalhost\nnie\n0\n", want: "Anulowano.", existing: true},
+		{name: "eof_at_format", input: "1\nlocalhost\n", want: "Choose a format [1]:"},
+		{name: "eof_at_confirmation", input: "1\nlocalhost\n1\n", want: "Generate the certificate?"},
+		{name: "back_at_format", input: "1\nlocalhost\n0\n0\n", want: "0. Back"},
+		{name: "invalid_format", input: "1\nlocalhost\n9\n0\n0\n", want: "Invalid format."},
+		{name: "pfx_cancel", input: "1\nlocalhost\n2\nn\n0\n", want: "Format: PFX (Modern2023)"},
+		{name: "polish_pfx_cancel", args: []string{"-lang=pl"}, input: "1\nlocalhost\n2\nnie\n0\n", want: "Anulowano."},
+		{name: "ipv4_summary", input: "1\n192.0.2.1\n1\nn\n0\n", want: "DNS/IP: 192.0.2.1"},
+		{name: "ipv6_summary", input: "1\n2001:db8::1\n\nn\n0\n", want: "2001_db8__1.pem"},
+		{name: "international_dns", input: "1\nbücher.example\n1\nn\n0\n", want: "DNS/IP: xn--bcher-kva.example"},
+		{name: "polish_cancel_existing", args: []string{"-lang=pl"}, input: "1\nlocalhost\n1\nnie\n0\n", want: "Anulowano.", existing: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -74,6 +81,12 @@ func TestMenuDoesNotWriteBeforeConfirmation(t *testing.T) {
 					t.Errorf("summary must show both absolute output paths: %s", output)
 				}
 			}
+			if strings.Contains(string(output), "Format: PFX") {
+				path := filepath.Join(root, "user home", "QuestLab-Cert", "certificates", "localhost.pfx")
+				if !strings.Contains(string(output), path) {
+					t.Errorf("PFX summary omits absolute path: %s", output)
+				}
+			}
 			if after := snapshotPEMTestTree(t, root); !reflect.DeepEqual(after, before) {
 				t.Errorf("menu wrote files before confirmation: before=%v, after=%v", before, after)
 			}
@@ -95,7 +108,11 @@ func TestMenuConfirmedPEMGeneration(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			host := strings.ReplaceAll(tc.name, "_", "-") + ".example.test"
-			input := "1\n" + host + "\n" + tc.answer + "\n" + tc.guideAnswer
+			format := "" // Enter selects PEM by default.
+			if tc.language == "pl" {
+				format = "1"
+			}
+			input := "1\n" + host + "\n" + format + "\n" + tc.answer + "\n" + tc.guideAnswer
 			var args []string
 			if tc.language == "pl" {
 				args = []string{"-lang=pl"}
@@ -185,7 +202,7 @@ func TestMenuHomeDirectoryPreservesExistingPEM(t *testing.T) {
 				t.Fatal(err)
 			}
 			before := snapshotPEMTestTree(t, root)
-			output, err := runCLIWithInput(t, root, "1\nexisting.test\nyes\n0\n")
+			output, err := runCLIWithInput(t, root, "1\nexisting.test\n1\nyes\n0\n")
 			var exitErr *exec.ExitError
 			if !errors.As(err, &exitErr) || exitErr.ExitCode() != 1 || !strings.Contains(string(output), "refusing to overwrite") {
 				t.Fatalf("expected refusal to overwrite: %v\n%s", err, output)
@@ -214,5 +231,60 @@ func TestCLIDefaultOutputStaysInWorkingDirectory(t *testing.T) {
 	}
 	if pathExists(filepath.Join(root, "user home")) {
 		t.Error("traditional CLI created the menu output directory")
+	}
+}
+
+func TestMenuPFXDoesNotWriteOnPasswordFailure(t *testing.T) {
+	for _, language := range []string{"en", "pl"} {
+		t.Run(language, func(t *testing.T) {
+			root := t.TempDir()
+			before := snapshotPEMTestTree(t, root)
+			secret := "not-terminal-password-input"
+			output, err := runCLIWithInput(t, root, "1\nserver.test\n2\nyes\n"+secret+"\n", "-lang="+language)
+			if err == nil || !strings.Contains(string(output), "PFX") || strings.Contains(string(output), secret) {
+				t.Fatalf("noninteractive password must be refused without leaking it: %v\n%s", err, output)
+			}
+			if strings.Contains(string(output), "Show IIS") || strings.Contains(string(output), "Wyświetlić instrukcję") {
+				t.Error("instructions offered after failed PFX input")
+			}
+			if after := snapshotPEMTestTree(t, root); !reflect.DeepEqual(before, after) {
+				t.Error("password failure created output directories, CA or files")
+			}
+		})
+	}
+}
+
+func TestMenuPFXPreservesExistingFile(t *testing.T) {
+	root := t.TempDir()
+	dir := filepath.Join(root, "user home", "QuestLab-Cert", "certificates")
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "existing.test.pfx"), []byte("original PFX"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	before := snapshotPEMTestTree(t, root)
+	output, err := runCLIWithInput(t, root, "1\nexisting.test\n2\nyes\n")
+	if err == nil || !strings.Contains(string(output), "refusing to overwrite existing PFX") {
+		t.Fatalf("expected refusal to overwrite menu PFX: %v\n%s", err, output)
+	}
+	if after := snapshotPEMTestTree(t, root); !reflect.DeepEqual(before, after) {
+		t.Error("refused PFX export changed existing files or created CA")
+	}
+}
+
+func TestMenuReaderDoesNotBufferPasswordInput(t *testing.T) {
+	for _, newline := range []string{"\n", "\r\n"} {
+		t.Run(newline, func(t *testing.T) {
+			input := strings.NewReader("yes" + newline + "password-not-for-scanner" + newline)
+			scanner := bufio.NewScanner(menuReader{input})
+			if !scanner.Scan() || scanner.Text() != "yes" {
+				t.Fatal("failed to read menu confirmation", scanner.Err())
+			}
+			remaining, err := io.ReadAll(input)
+			if err != nil || string(remaining) != "password-not-for-scanner"+newline {
+				t.Fatal("menu scanner read ahead into password input", err)
+			}
+		})
 	}
 }

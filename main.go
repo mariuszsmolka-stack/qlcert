@@ -135,6 +135,11 @@ type mkcert struct {
 }
 
 func (m *mkcert) Run(args []string) {
+	m.run(args, "")
+}
+
+// The menu supplies an output directory; CLI paths retain their usual behavior.
+func (m *mkcert) run(args []string, outputDir string) {
 	if !m.uninstallMode {
 		if len(args) == 0 && m.csrPath == "" && !m.installMode {
 			flag.Usage()
@@ -175,6 +180,9 @@ func (m *mkcert) Run(args []string) {
 			clear(m.pfxPassword)
 			m.pfxPassword = nil
 		}()
+	}
+	if outputDir != "" {
+		fatalIfErr(os.MkdirAll(outputDir, 0700), "failed to create certificate directory")
 	}
 
 	m.CAROOT = getCAROOT()
