@@ -33,21 +33,20 @@ Czytelny interfejs, bezpieczne ustawienia i sprawdzona dokumentacja mają równi
 
 ## Stan obecny
 
-Poniższe możliwości wynikają z istniejącego kodu odziedziczonego po mkcert. Ich obecność nie oznacza ukończenia planowanych etapów ani pełnej weryfikacji wydania QuestLab Cert 1.0.
+**Stan na 24.10.2026, po wpisie 014 w [historii rozwoju](docs/DEVELOPMENT_HISTORY.md).** Oznaczenia dotyczą implementacji i kontroli lokalnych, nie gotowości wydania 1.0.
 
-| Obszar | Aktualne możliwości i ograniczenia |
-| --- | --- |
-| Obsługa programu | Dostępne CLI; pomoc i komunikaty nadal odwołują się do mkcert. Brak interaktywnego kreatora i pełnego interfejsu PL/EN. |
-| Lokalne CA | Tworzenie i odczyt lokalnego CA; istnieją polecenia instalowania i usuwania zaufania. Docelowe zasady zgody i ochrony kluczy wymagają przeglądu. |
-| Certyfikaty HTTPS | Generowanie certyfikatów dla nazw DNS i adresów IP. |
-| Eksport | Dostępne PEM i PKCS#12 (`.p12`, format znany także jako PFX). Obecny eksport PKCS#12 używa stałego hasła `changeit`; nie spełnia to wymagań bezpieczeństwa wersji 1.0. |
-| Platformy | Istnieje kod obsługi Windows i Linux. Priorytet rozwoju i weryfikacji QuestLab Cert to Windows, następnie Linux. |
-| Enumeracja Windows | Wykonana poprawka `truststore_windows.go`: użycie `syscall.CertEnumCertificatesInStore()`, zachowanie obsługi końca enumeracji i zwalnianie kontekstu przy wcześniejszym wyjściu. |
-| Weryfikacja poprawki Windows | `go vet ./...` bez ostrzeżeń, `go test ./...` zakończone powodzeniem z informacją o braku plików testowych oraz poprawny build Windows. Nie instalowano ani nie usuwano certyfikatów. |
+| Obszar | Zrealizowano | Pozostaje do sprawdzenia lub wykonania |
+| --- | --- | --- |
+| Interfejs | Nazwa QuestLab Cert, pomoc i komunikaty EN/PL, domyślnie EN, `-lang=pl`, menu interaktywne, zachowane CLI | Dopracowanie kreatora dla wielu nazw SAN |
+| HTTPS i PEM | Generowanie dla DNS/IP, lokalne CA, zapis PEM w katalogu użytkownika, odmowa nadpisania | Kontrola pozostałych ryzyk ochrony CA i zapisu |
+| PFX | Eksport z hasłem podawanym bez echa, profil Modern2023, ochrona plików, obsługa w menu EN/PL | Import na rzeczywistym IIS; pełna weryfikacja środowisk docelowych |
+| Instrukcje | Instrukcje Apache, Nginx i IIS w EN/PL, bez automatycznej ingerencji w konfigurację | Testy na działających serwerach i sprawdzenie zaufania klienta |
+| Testy i zależności | Testy jednostkowe i regresyjne na Windows, `go vet`, build Windows i Linux AMD64, lokalny `govulncheck`: 0 zgłoszonych osiągalnych podatności | Testy wykonania na Linux, integracyjne, powtarzalne CI i artefakty wydania |
+| Otwarte ustalenia audytu | Naprawiono m.in. B01, B02, B04; częściowo B03 | W szczególności B05 (dokładne dopasowanie przy usuwaniu zaufania Windows), inne niezamknięte ustalenia z audytu |
 
-Interaktywny kreator, pełna obsługa PL/EN, bezpieczny eksport PFX bez stałego hasła, instrukcje QuestLab dla serwerów HTTPS i diagnostyka certyfikatów są planowane. Nie należy przedstawiać ich jako gotowych funkcji.
+Pełny wykaz ustaleń i ograniczeń znajduje się w [TECHNICAL_AUDIT.md](docs/TECHNICAL_AUDIT.md); chronologia poprawek w [DEVELOPMENT_HISTORY.md](docs/DEVELOPMENT_HISTORY.md).
 
-## Planowane funkcjonalności
+## Zakres funkcjonalny wersji 1.0
 
 - Tworzenie lokalnego CA i czytelne wyjaśnienie jego roli.
 - Generowanie certyfikatów dla nazw DNS i adresów IP przez kreator lub CLI.
@@ -59,11 +58,11 @@ Interaktywny kreator, pełna obsługa PL/EN, bezpieczny eksport PFX bez stałego
 
 ## Etapy rozwoju
 
-Listy kontrolne określają mierzalne kryteria ukończenia. Zaznaczono wyłącznie wykonaną poprawkę Windows; pozostałe punkty są pracami do wykonania.
+Listy kontrolne pokazują stan realizacji według kodu i udokumentowanych kontroli. Testy na rzeczywistych serwerach pozostają odrębnym warunkiem wydania.
 
 ### Etap 0 — uporządkowanie i sprawdzenie istniejącego kodu
 
-**Status:** w toku; etap nie jest ukończony.
+**Status:** audyt wykonany; wskazane problemy są naprawiane zgodnie z priorytetami.
 
 **Cel:** ustalić sprawdzoną bazę techniczną do dalszego rozwoju.
 
@@ -72,14 +71,14 @@ Listy kontrolne określają mierzalne kryteria ukończenia. Zaznaczono wyłączn
 **Kryteria ukończenia:**
 
 - [x] Poprawiono enumerację w `truststore_windows.go` bez wyciszania `go vet`; sprawdzono koniec enumeracji i zwalnianie kontekstów oraz wykonano `go vet`, `go test` i build Windows.
-- [ ] Spisano aktualne funkcje, zależności platformowe i problemy wymagające rozwiązania, w tym stałe hasło eksportu PKCS#12.
-- [ ] Udokumentowano przegląd zależności Go: ich aktualność, bezpieczeństwo i kompatybilność oraz ocenę bibliotek kryptograficznych, ze szczególnym uwzględnieniem obsługi PKCS#12.
-- [ ] Przejrzano pozostałą obsługę błędów i zasobów w istniejącym kodzie oraz określono braki testów; wynik `go test` bez plików testowych nie jest uznawany za pokrycie testami.
-- [ ] Potwierdzono zachowanie `LICENSE`, `AUTHORS` i nagłówków licencyjnych oraz zapisano wyniki przeglądu i listę otwartych prac.
+- [x] Spisano aktualne funkcje, zależności platformowe i problemy wymagające rozwiązania, w tym stałe hasło eksportu PKCS#12.
+- [x] Udokumentowano przegląd zależności Go: ich aktualność, bezpieczeństwo i kompatybilność oraz ocenę bibliotek kryptograficznych, ze szczególnym uwzględnieniem obsługi PKCS#12.
+- [x] Przejrzano pozostałą obsługę błędów i zasobów w istniejącym kodzie oraz określono braki testów; wynik `go test` bez plików testowych nie jest uznawany za pokrycie testami.
+- [x] Potwierdzono zachowanie `LICENSE`, `AUTHORS` i nagłówków licencyjnych oraz zapisano wyniki przeglądu i listę otwartych prac.
 
 ### Etap 1 — identyfikacja QuestLab Cert i interfejs PL/EN
 
-**Status:** planowany.
+**Status:** ukończony w zakresie interfejsu EN/PL i menu (wpisy 008–009).
 
 **Cel:** nadać programowi spójną nazwę QuestLab Cert i przygotować dwujęzyczną obsługę.
 
@@ -87,33 +86,34 @@ Listy kontrolne określają mierzalne kryteria ukończenia. Zaznaczono wyłączn
 
 **Kryteria ukończenia:**
 
-- [ ] Pomoc i informacja o wersji identyfikują program jako QuestLab Cert oraz zachowują informację o pochodzeniu z mkcert.
-- [ ] Bez parametru `-lang` cała aplikacja używa EN; jawne `-lang=en` daje ten sam wybór języka, a `-lang=pl` wybiera PL. Każdy dostępny komunikat i tekst pomocy ma odpowiednik w obu językach.
-- [ ] Parametr `-lang` stosuje ten sam wybór języka w menu, kreatorze interaktywnym i tradycyjnym CLI; sprawdzono oba tryby dla PL oraz EN.
-- [ ] Uruchomienie bez argumentów otwiera menu interaktywne w EN. Uruchomienie z samym `-lang=pl` otwiera menu w PL, a z samym `-lang=en` — w EN.
-- [ ] Zmiana języka systemu nie wpływa na język aplikacji. Po uruchomieniu z `-lang=pl` kolejne uruchomienie bez tego parametru używa EN i nie odczytuje ani nie zapisuje preferencji językowych.
-- [ ] Nieprawidłowy kod, np. `-lang=de`, powoduje czytelny komunikat błędu wskazujący dozwolone wartości `en` i `pl`.
-- [ ] Te same scenariusze pomocy, poprawnego wywołania i błędnych argumentów sprawdzono dla domyślnego EN, jawnego `-lang=en` oraz `-lang=pl`; istniejące polecenia CLI nadal działają.
+- [x] Pomoc i informacja o wersji identyfikują program jako QuestLab Cert oraz zachowują informację o pochodzeniu z mkcert.
+- [x] Bez parametru `-lang` cała aplikacja używa EN; jawne `-lang=en` daje ten sam wybór języka, a `-lang=pl` wybiera PL. Każdy dostępny komunikat i tekst pomocy ma odpowiednik w obu językach.
+- [x] Parametr `-lang` stosuje ten sam wybór języka w menu, kreatorze interaktywnym i tradycyjnym CLI; sprawdzono oba tryby dla PL oraz EN.
+- [x] Uruchomienie bez argumentów otwiera menu interaktywne w EN. Uruchomienie z samym `-lang=pl` otwiera menu w PL, a z samym `-lang=en` — w EN.
+- [x] Zmiana języka systemu nie wpływa na język aplikacji. Po uruchomieniu z `-lang=pl` kolejne uruchomienie bez tego parametru używa EN i nie odczytuje ani nie zapisuje preferencji językowych.
+- [x] Nieprawidłowy kod, np. `-lang=de`, powoduje czytelny komunikat błędu wskazujący dozwolone wartości `en` i `pl`.
+- [x] Te same scenariusze pomocy, poprawnego wywołania i błędnych argumentów sprawdzono dla domyślnego EN, jawnego `-lang=en` oraz `-lang=pl`; istniejące polecenia CLI nadal działają.
 
 ### Etap 2 — interaktywny kreator certyfikatów HTTPS
 
-**Status:** planowany.
+**Status:** w realizacji; podstawowy kreator PEM/PFX działa (wpisy 009–010, 014).
 
 **Cel:** umożliwić początkującemu użytkownikowi przygotowanie certyfikatu HTTPS bez znajomości składni CLI.
 
-**Zakres:** zebranie nazw DNS i adresów IP, wybór miejsca zapisu, podsumowanie oraz potwierdzenie generowania. Kreator może początkowo obsługiwać wyłącznie PEM. Wybór PEM/PFX i eksport PFX będą dostępne dopiero po zaimplementowaniu bezpiecznego mechanizmu z etapu 3. Nie wolno udostępniać użytkownikowi eksportu ze stałym hasłem `changeit`. Docelowy bezpieczny eksport i obsługa CA są warunkiem ukończenia etapu 3.
+**Zakres:** wybór pojedynczej nazwy DNS lub adresu IP, formatu PEM/PFX, katalogu zapisu, podsumowanie i potwierdzenie. Bezpieczny eksport PFX jest już dostępny; obsługa wielu nazw SAN w kreatorze pozostaje planowana.
 
 **Kryteria ukończenia:**
 
-- [ ] Kreator w PL i EN prowadzi od podania DNS/IP do podsumowania i wygenerowania certyfikatu.
-- [ ] Do czasu wdrożenia bezpiecznego mechanizmu z etapu 3 kreator udostępnia wyłącznie PEM; sprawdzono, że użytkownik nie może uruchomić eksportu ze stałym hasłem `changeit`.
-- [ ] Sprawdzono poprawną nazwę DNS, adres IPv4, adres IPv6, wiele wpisów oraz odrzucenie pustych lub błędnych danych.
-- [ ] Użytkownik może anulować przed zapisem; istniejące pliki wymagają potwierdzenia przed nadpisaniem.
-- [ ] Certyfikat zawiera wskazane nazwy i adresy, a równoważne wywołanie CLI nadal działa.
+- [x] Kreator w PL i EN prowadzi od podania DNS/IP do podsumowania i wygenerowania certyfikatu.
+- [x] Kreator oferuje PEM lub PFX dopiero po wdrożeniu eksportu z hasłem użytkownika i profilem Modern2023, bez stałego `changeit`.
+- [x] Sprawdzono pojedynczą nazwę DNS, IPv4, IPv6 i odrzucenie pustych lub błędnych danych.
+- [ ] Dodano i przetestowano w kreatorze wiele nazw DNS/IP (SAN) dla jednego certyfikatu.
+- [x] Użytkownik może anulować przed zapisem; istniejące pliki są chronione przed nadpisaniem (operacja jest odrzucana).
+- [x] Certyfikat zawiera wskazaną pojedynczą nazwę lub adres, a dotychczasowe CLI nadal działa.
 
 ### Etap 3 — bezpieczny eksport PEM/PFX i lokalne CA
 
-**Status:** planowany.
+**Status:** częściowo wykonany; bezpieczny eksport PFX działa, ochrona CA i testy docelowe pozostają otwarte.
 
 **Cel:** zapewnić bezpieczne przechowywanie i eksport materiału kryptograficznego oraz świadomą obsługę lokalnego CA.
 
@@ -121,16 +121,17 @@ Listy kontrolne określają mierzalne kryteria ukończenia. Zaznaczono wyłączn
 
 **Kryteria ukończenia:**
 
-- [ ] Sprawdzono utworzenie i ponowne użycie CA oraz zgodność klucza i certyfikatu w eksportach PEM/PFX.
-- [ ] Usunięto stałe hasło `changeit`; PFX wymaga niepustego hasła określonego przez użytkownika. Hasło nie może być przekazywane jawnym argumentem CLI ani trafiać do historii poleceń lub logów. Wpisywanie hasła jest niewidoczne; hasło nie jest zapisywane w pomocy ani kodzie.
-- [ ] Zweryfikowano i udokumentowano bezpieczeństwo oraz kompatybilność algorytmów ochrony danych PKCS#12 używanych przez mechanizm eksportu PFX.
+- [x] W testach lokalnych sprawdzono utworzenie i ponowne użycie CA oraz zgodność klucza i certyfikatu w eksportach PEM/PFX.
+- [x] Usunięto stałe hasło `changeit`; PFX wymaga hasła użytkownika z ukrytym wprowadzaniem i potwierdzeniem, bez przekazywania w argumentach CLI lub logach.
+- [x] Zweryfikowano lokalnie profil Modern2023, algorytmy ochrony PKCS#12 oraz odczyt wygenerowanego pakietu.
+- [ ] Potwierdzono kompatybilność poprzez import PFX na rzeczywistym IIS.
 - [ ] Sprawdzono ograniczenia dostępu do plików kluczy na Windows, następnie Linux; standardowy eksport certyfikatu HTTPS nigdy nie zawiera klucza prywatnego CA.
 - [ ] Kreator wyjaśnia skutki instalacji CA i wymaga osobnej zgody. W CLI instalację zaufania uruchamia wyłącznie jawne polecenie użytkownika; odmowa w kreatorze nie zmienia magazynu.
-- [ ] Generowanie i eksport działają offline bez instalowania zaufania; testy używają plików tymczasowych i atrap operacji magazynu.
+- [x] Generowanie i eksport działają lokalnie bez instalowania zaufania; testy używają katalogów tymczasowych i nie zmieniają systemowych magazynów.
 
 ### Etap 4 — instrukcje konfiguracji HTTPS
 
-**Status:** planowany.
+**Status:** instrukcje gotowe; testy integracyjne na serwerach oczekują.
 
 **Cel:** umożliwić samodzielne podłączenie wygenerowanego certyfikatu do serwera WWW w laboratorium.
 
@@ -138,10 +139,10 @@ Listy kontrolne określają mierzalne kryteria ukończenia. Zaznaczono wyłączn
 
 **Kryteria ukończenia:**
 
-- [ ] Dostępne są trzy instrukcje: IIS, Apache i Nginx, każda w PL oraz EN.
-- [ ] Każda instrukcja opisuje wymagane pliki, konfigurację HTTPS, weryfikację działania oraz rozróżnia certyfikat CA i jego klucz prywatny.
+- [x] Dostępne są trzy instrukcje: IIS, Apache i Nginx, każda w PL oraz EN.
+- [x] Każda instrukcja opisuje wymagane pliki, konfigurację HTTPS, weryfikację działania oraz rozróżnia certyfikat CA i jego klucz prywatny.
 - [ ] Każdy scenariusz sprawdzono w odizolowanym laboratorium; udokumentowano użyte wersje serwera i wynik połączenia HTTPS.
-- [ ] Instrukcje wyjaśniają, że zaufanie do CA jest osobnym działaniem użytkownika i nie powstaje przez samo wygenerowanie certyfikatu.
+- [x] Instrukcje wyjaśniają, że zaufanie do CA jest osobnym działaniem użytkownika i nie powstaje przez samo wygenerowanie certyfikatu.
 
 ### Etap 5 — diagnostyka certyfikatów
 
