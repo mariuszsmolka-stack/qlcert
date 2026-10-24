@@ -36,7 +36,7 @@ func main() {
 	uiLanguage = "en"
 	log.SetFlags(0)
 	if len(os.Args) == 1 {
-		fatalIfErr(runMenu(os.Stdin, os.Stdout), "failed to read menu input")
+		fatalIfErr(runMenu(os.Stdin, os.Stdout), "menu operation failed")
 		return
 	}
 	var (
@@ -104,7 +104,7 @@ func main() {
 		}
 	})
 	if onlyLanguage && flag.NArg() == 0 {
-		fatalIfErr(runMenu(os.Stdin, os.Stdout), "failed to read menu input")
+		fatalIfErr(runMenu(os.Stdin, os.Stdout), "menu operation failed")
 		return
 	}
 	(&mkcert{

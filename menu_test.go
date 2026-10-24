@@ -3,7 +3,9 @@ package main
 import (
 	"bytes"
 	"crypto/x509"
+	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -38,7 +40,7 @@ func TestMenuDoesNotWriteBeforeConfirmation(t *testing.T) {
 		{name: "eof_at_name", input: "1\n", want: "Enter one DNS"},
 		{name: "eof_at_confirmation", input: "1\nlocalhost\n", want: "Generate the certificate?"},
 		{name: "ipv4_summary", input: "1\n192.0.2.1\nn\n0\n", want: "DNS/IP: 192.0.2.1"},
-		{name: "ipv6_summary", input: "1\n2001:db8::1\nn\n0\n", want: "Certificate: ./2001_db8__1.pem"},
+		{name: "ipv6_summary", input: "1\n2001:db8::1\nn\n0\n", want: "2001_db8__1.pem"},
 		{name: "international_dns", input: "1\nbücher.example\nn\n0\n", want: "DNS/IP: xn--bcher-kva.example"},
 		{name: "polish_cancel_existing", args: []string{"-lang=pl"}, input: "1\nlocalhost\nnie\n0\n", want: "Anulowano.", existing: true},
 	}
@@ -63,6 +65,12 @@ func TestMenuDoesNotWriteBeforeConfirmation(t *testing.T) {
 			if !strings.Contains(string(output), tt.want) {
 				t.Errorf("menu output = %s, want %q", output, tt.want)
 			}
+			if strings.Contains(string(output), "Format: PEM") {
+				dir := filepath.Join(root, "user home", "QuestLab-Cert", "certificates")
+				if !filepath.IsAbs(dir) || strings.Count(string(output), dir+string(os.PathSeparator)) != 2 {
+					t.Errorf("summary must show both absolute output paths: %s", output)
+				}
+			}
 			if after := snapshotPEMTestTree(t, root); !reflect.DeepEqual(after, before) {
 				t.Errorf("menu wrote files before confirmation: before=%v, after=%v", before, after)
 			}
@@ -72,6 +80,7 @@ func TestMenuDoesNotWriteBeforeConfirmation(t *testing.T) {
 
 func TestMenuConfirmedPEMGeneration(t *testing.T) {
 	root := t.TempDir()
+	certDir := filepath.Join(root, "user home", "QuestLab-Cert", "certificates")
 	var originalCert, originalKey []byte
 	for _, tc := range []struct{ language, answer, summary, generated string }{
 		{"en", "yes", "Summary", "Created a new certificate"},
@@ -95,6 +104,16 @@ func TestMenuConfirmedPEMGeneration(t *testing.T) {
 			if !strings.Contains(text, "Format: PEM") {
 				t.Error("PEM format missing from summary")
 			}
+			certPath := filepath.Join(certDir, host+".pem")
+			keyPath := filepath.Join(certDir, host+"-key.pem")
+			for _, path := range []string{certPath, keyPath} {
+				if !filepath.IsAbs(path) || !strings.Contains(text, path) {
+					t.Errorf("absolute output path missing: %q\n%s", path, output)
+				}
+				if pathExists(filepath.Join(root, filepath.Base(path))) {
+					t.Errorf("menu wrote a certificate or key into the working directory: %q", path)
+				}
+			}
 			caBytes, err := os.ReadFile(filepath.Join(root, "ca", rootName))
 			if err != nil {
 				t.Fatal(err)
@@ -108,7 +127,7 @@ func TestMenuConfirmedPEMGeneration(t *testing.T) {
 			} else if !bytes.Equal(originalCert, caBytes) || !bytes.Equal(originalKey, keyBytes) {
 				t.Error("existing test CA was replaced")
 			}
-			certBytes, err := os.ReadFile(filepath.Join(root, host+".pem"))
+			certBytes, err := os.ReadFile(certPath)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -118,14 +137,58 @@ func TestMenuConfirmedPEMGeneration(t *testing.T) {
 			if _, err := cert.Verify(x509.VerifyOptions{Roots: roots, DNSName: host}); err != nil {
 				t.Errorf("menu certificate does not verify: %v", err)
 			}
-			if _, err := os.Stat(filepath.Join(root, host+"-key.pem")); err != nil {
+			if _, err := os.Stat(keyPath); err != nil {
 				t.Error(err)
 			}
 			for _, extension := range []string{".p12", ".pfx"} {
-				if pathExists(filepath.Join(root, host+extension)) {
+				if pathExists(filepath.Join(certDir, host+extension)) {
 					t.Errorf("menu unexpectedly exported %s", extension)
 				}
 			}
 		})
+	}
+}
+
+func TestMenuHomeDirectoryPreservesExistingPEM(t *testing.T) {
+	for _, existingName := range []string{"existing.test.pem", "existing.test-key.pem"} {
+		t.Run(existingName, func(t *testing.T) {
+			root := t.TempDir()
+			// Prepare only a temporary CA so the check also verifies that a failed
+			// output operation does not replace an existing CA or its key.
+			if output, err := runB04CLI(t, root, "-ecdsa", "seed.test"); err != nil {
+				t.Fatalf("test CA setup failed: %v\n%s", err, output)
+			}
+			dir := filepath.Join(root, "user home", "QuestLab-Cert", "certificates")
+			if err := os.MkdirAll(dir, 0700); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(dir, existingName), []byte("original PEM marker"), 0600); err != nil {
+				t.Fatal(err)
+			}
+			before := snapshotPEMTestTree(t, root)
+			output, err := runCLIWithInput(t, root, "1\nexisting.test\nyes\n0\n")
+			var exitErr *exec.ExitError
+			if !errors.As(err, &exitErr) || exitErr.ExitCode() != 1 || !strings.Contains(string(output), "refusing to overwrite") {
+				t.Fatalf("expected refusal to overwrite: %v\n%s", err, output)
+			}
+			if after := snapshotPEMTestTree(t, root); !reflect.DeepEqual(after, before) {
+				t.Errorf("existing files changed or new files remained: before=%v, after=%v", before, after)
+			}
+		})
+	}
+}
+
+func TestCLIDefaultOutputStaysInWorkingDirectory(t *testing.T) {
+	root := t.TempDir()
+	if output, err := runB04CLI(t, root, "-ecdsa", "cli.test"); err != nil {
+		t.Fatalf("CLI generation failed: %v\n%s", err, output)
+	}
+	for _, name := range []string{"cli.test.pem", "cli.test-key.pem"} {
+		if _, err := os.Stat(filepath.Join(root, name)); err != nil {
+			t.Error(err)
+		}
+	}
+	if pathExists(filepath.Join(root, "user home")) {
+		t.Error("traditional CLI created the menu output directory")
 	}
 }

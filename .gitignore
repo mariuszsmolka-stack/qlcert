@@ -1,0 +1,10 @@
+# Generated certificates, private keys and certificate/key bundles.
+# Match extension case on Windows and Linux.
+*.[pP][eE][mM]
+*.[kK][eE][yY]
+*.[cC][rR][tT]
+*.[cC][eE][rR]
+*.[dD][eE][rR]
+*.[pP]12
+*.[pP][fF][xX]
+**/QuestLab-Cert/certificates/

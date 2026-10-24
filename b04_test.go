@@ -41,6 +41,8 @@ func runCLIWithInput(t *testing.T, root, input string, args ...string) ([]byte, 
 	t.Helper()
 	t.Setenv("QUESTLAB_B04_HELPER", "1")
 	t.Setenv("CAROOT", filepath.Join(root, "ca"))
+	t.Setenv("HOME", filepath.Join(root, "user home"))
+	t.Setenv("USERPROFILE", filepath.Join(root, "user home"))
 	// Disable every trust store, including in a regression of the CLI ordering.
 	t.Setenv("TRUST_STORES", "none")
 	t.Setenv("JAVA_HOME", "")

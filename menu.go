@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"golang.org/x/net/idna"
@@ -43,7 +45,17 @@ func runMenu(input io.Reader, output io.Writer) error {
 			}
 			m := &mkcert{} // PEM only; never enable installation of trust here.
 			certPath, keyPath, _ := m.fileNames([]string{host})
-			fmt.Fprintf(output, tr("\nSummary\nDNS/IP: %s\nCertificate: %s\nPrivate key: %s\nFormat: PEM\n"), host, certPath, keyPath)
+			home, err := os.UserHomeDir()
+			if err != nil {
+				return fmt.Errorf(tr("failed to locate the home directory: %w"), err)
+			}
+			certDir, err := filepath.Abs(filepath.Join(home, "QuestLab-Cert", "certificates"))
+			if err != nil {
+				return fmt.Errorf(tr("failed to resolve the certificate directory: %w"), err)
+			}
+			m.certFile = filepath.Join(certDir, certPath)
+			m.keyFile = filepath.Join(certDir, keyPath)
+			fmt.Fprintf(output, tr("\nSummary\nDNS/IP: %s\nCertificate: %s\nPrivate key: %s\nFormat: PEM\n"), host, m.certFile, m.keyFile)
 			fmt.Fprintln(output, tr("A local CA will be created if needed. Trust will not be installed."))
 			fmt.Fprint(output, tr("Generate the certificate? [y/N]: "))
 			if !scanner.Scan() {
@@ -53,6 +65,9 @@ func runMenu(input io.Reader, output io.Writer) error {
 			if answer != "y" && answer != "yes" && answer != "t" && answer != "tak" {
 				fmt.Fprintln(output, tr("Cancelled. No files were created."))
 				continue
+			}
+			if err := os.MkdirAll(certDir, 0700); err != nil {
+				return fmt.Errorf(tr("failed to create certificate directory %q: %w"), certDir, err)
 			}
 			m.Run([]string{host})
 		default:
