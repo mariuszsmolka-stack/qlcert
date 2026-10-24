@@ -65,6 +65,9 @@ func TestMenuDoesNotWriteBeforeConfirmation(t *testing.T) {
 			if !strings.Contains(string(output), tt.want) {
 				t.Errorf("menu output = %s, want %q", output, tt.want)
 			}
+			if strings.Contains(string(output), "Apache 2.4") {
+				t.Error("Apache instructions offered before successful generation")
+			}
 			if strings.Contains(string(output), "Format: PEM") {
 				dir := filepath.Join(root, "user home", "QuestLab-Cert", "certificates")
 				if !filepath.IsAbs(dir) || strings.Count(string(output), dir+string(os.PathSeparator)) != 2 {
@@ -82,13 +85,15 @@ func TestMenuConfirmedPEMGeneration(t *testing.T) {
 	root := t.TempDir()
 	certDir := filepath.Join(root, "user home", "QuestLab-Cert", "certificates")
 	var originalCert, originalKey []byte
-	for _, tc := range []struct{ language, answer, summary, generated string }{
-		{"en", "yes", "Summary", "Created a new certificate"},
-		{"pl", "tak", "Podsumowanie", "Utworzono nowy certyfikat"},
+	for _, tc := range []struct{ name, language, answer, summary, generated, guideAnswer, guideTitle string }{
+		{"english_guide", "en", "yes", "Summary", "Created a new certificate", "yes\n0\n", "manual steps"},
+		{"polish_guide", "pl", "tak", "Podsumowanie", "Utworzono nowy certyfikat", "tak\n0\n", "kroki ręczne"},
+		{"decline_guide", "en", "yes", "Summary", "Created a new certificate", "n\n0\n", ""},
+		{"eof_at_guide", "pl", "tak", "Podsumowanie", "Utworzono nowy certyfikat", "", ""},
 	} {
-		t.Run(tc.language, func(t *testing.T) {
-			host := tc.language + ".example.test"
-			input := "1\n" + host + "\n" + tc.answer + "\n0\n"
+		t.Run(tc.name, func(t *testing.T) {
+			host := strings.ReplaceAll(tc.name, "_", "-") + ".example.test"
+			input := "1\n" + host + "\n" + tc.answer + "\n" + tc.guideAnswer
 			var args []string
 			if tc.language == "pl" {
 				args = []string{"-lang=pl"}
@@ -103,6 +108,18 @@ func TestMenuConfirmedPEMGeneration(t *testing.T) {
 			}
 			if !strings.Contains(text, "Format: PEM") {
 				t.Error("PEM format missing from summary")
+			}
+			if prompt := strings.Index(text, "Apache 2.4"); prompt <= strings.Index(text, tc.generated) {
+				t.Errorf("Apache instructions must be offered after generation: %s", output)
+			}
+			if tc.guideTitle != "" {
+				for _, want := range []string{tc.guideTitle, "ServerName " + host, "https://" + host + "/", filepath.Join(root, "ca", rootName)} {
+					if !strings.Contains(text, want) {
+						t.Errorf("Apache instructions omit %q: %s", want, output)
+					}
+				}
+			} else if strings.Contains(text, "<VirtualHost") {
+				t.Error("Apache instructions displayed without confirmation")
 			}
 			certPath := filepath.Join(certDir, host+".pem")
 			keyPath := filepath.Join(certDir, host+"-key.pem")
@@ -171,6 +188,9 @@ func TestMenuHomeDirectoryPreservesExistingPEM(t *testing.T) {
 			if !errors.As(err, &exitErr) || exitErr.ExitCode() != 1 || !strings.Contains(string(output), "refusing to overwrite") {
 				t.Fatalf("expected refusal to overwrite: %v\n%s", err, output)
 			}
+			if strings.Contains(string(output), "Apache 2.4") {
+				t.Error("Apache instructions offered after failed generation")
+			}
 			if after := snapshotPEMTestTree(t, root); !reflect.DeepEqual(after, before) {
 				t.Errorf("existing files changed or new files remained: before=%v, after=%v", before, after)
 			}
@@ -182,6 +202,8 @@ func TestCLIDefaultOutputStaysInWorkingDirectory(t *testing.T) {
 	root := t.TempDir()
 	if output, err := runB04CLI(t, root, "-ecdsa", "cli.test"); err != nil {
 		t.Fatalf("CLI generation failed: %v\n%s", err, output)
+	} else if strings.Contains(string(output), "Apache 2.4") {
+		t.Error("traditional CLI unexpectedly offers Apache instructions")
 	}
 	for _, name := range []string{"cli.test.pem", "cli.test-key.pem"} {
 		if _, err := os.Stat(filepath.Join(root, name)); err != nil {

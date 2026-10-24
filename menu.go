@@ -70,6 +70,14 @@ func runMenu(input io.Reader, output io.Writer) error {
 				return fmt.Errorf(tr("failed to create certificate directory %q: %w"), certDir, err)
 			}
 			m.Run([]string{host})
+			fmt.Fprint(output, tr("Show Apache 2.4 instructions for Ubuntu/Debian? [y/N]: "))
+			if !scanner.Scan() {
+				return scanner.Err()
+			}
+			switch strings.ToLower(strings.TrimSpace(scanner.Text())) {
+			case "y", "yes", "t", "tak":
+				printApacheInstructions(output, host, m.certFile, m.keyFile, filepath.Join(m.CAROOT, rootName))
+			}
 		default:
 			fmt.Fprintln(output, tr("Invalid option. Choose 1, 2 or 0."))
 		}
