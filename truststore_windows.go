@@ -28,7 +28,6 @@ var (
 	procCertCloseStore                   = modcrypt32.NewProc("CertCloseStore")
 	procCertDeleteCertificateFromStore   = modcrypt32.NewProc("CertDeleteCertificateFromStore")
 	procCertDuplicateCertificateContext  = modcrypt32.NewProc("CertDuplicateCertificateContext")
-	procCertEnumCertificatesInStore      = modcrypt32.NewProc("CertEnumCertificatesInStore")
 	procCertOpenSystemStoreW             = modcrypt32.NewProc("CertOpenSystemStoreW")
 )
 
@@ -107,11 +106,18 @@ func (w windowsRootStore) addCert(cert []byte) error {
 func (w windowsRootStore) deleteCertsWithSerial(serial *big.Int) (bool, error) {
 	// Go over each, deleting the ones we find
 	var cert *syscall.CertContext
+	defer func() {
+		// Enumeration frees the previous context, but early returns must free it explicitly.
+		if cert != nil {
+			syscall.CertFreeCertificateContext(cert)
+		}
+	}()
 	deletedAny := false
 	for {
 		// Next enum
-		certPtr, _, err := procCertEnumCertificatesInStore.Call(uintptr(w), uintptr(unsafe.Pointer(cert)))
-		if cert = (*syscall.CertContext)(unsafe.Pointer(certPtr)); cert == nil {
+		var err error
+		cert, err = syscall.CertEnumCertificatesInStore(syscall.Handle(w), cert)
+		if cert == nil {
 			if errno, ok := err.(syscall.Errno); ok && errno == 0x80092004 {
 				break
 			}
