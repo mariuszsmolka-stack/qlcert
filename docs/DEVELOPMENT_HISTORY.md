@@ -11,7 +11,7 @@
 Dokument pokazuje **w kolejności wykonania**, co QuestLab faktycznie poprawił albo dodał względem bazowego `mkcert`. Historia jest również podstawą do rzetelnego publicznego podsumowania wydania 1.0.
 
 1. **Każda zakończona i zatwierdzona zmiana otrzymuje NOWY WPIS NA KOŃCU dokumentu**, w sekcji „Dziennik wykonanych zmian”. Nie wpisujemy tam samych planów ani niepowiązanych commitów roboczych.
-2. Każdy wpis podaje: datę, kolejny numer, ID ustalenia audytu (jeśli istnieje), stan przed i po, pliki, numery GO/CVE/GHSA (jeśli dotyczą), commit, PR i wyniki testów. Nie wymyślamy identyfikatorów podatności.
+2. Nagłówek wpisu ma format `### NNN — opis zmiany`. Każdy wpis podaje: kolejny numer, ID ustalenia audytu (jeśli istnieje), stan przed i po, pliki, numery GO/CVE/GHSA (jeśli dotyczą), commit, PR i wyniki testów. Nie wymyślamy identyfikatorów podatności.
 3. Oddzielamy **wykrycie** od **naprawy w kodzie**, **weryfikacji testami** i **wydania użytkownikom**. Wyłączenie ostrzeżenia lub samo podniesienie wersji nie jest bez dowodów potwierdzeniem usunięcia ryzyka.
 4. Rejestr ustaleń poniżej może być aktualizowany o stan („otwarte”, „poprawione”, „zweryfikowane”, „odłożone z uzasadnieniem”), ale **chronologii w sekcji końcowej nie przepisujemy i nie usuwamy**. Korektę historycznego wpisu dokumentujemy następnym wpisem.
 5. Wpis przygotowujemy na gałęzi danej zmiany po uzyskaniu wyników kontroli i dopisujemy do końca dziennika. Po otwarciu PR uzupełniamy jego odnośnik, jeszcze przed scaleniem. Informacje dostępne dopiero po scaleniu (np. SHA commita scalającego) dopisujemy w późniejszej aktualizacji bez usuwania historii. Końcowe podsumowanie do `README.md` przygotujemy z wpisów potwierdzonych.
@@ -88,7 +88,7 @@ Ta sekcja jest celowo **niezamknięta**; zostanie opracowana na podstawie wpisó
 
 ## Dziennik wykonanych zmian — dopisuj nowe wpisy wyłącznie na końcu
 
-### 001 — 2026-10-24 — poprawka enumeracji certyfikatów Windows
+### 001 — poprawka enumeracji certyfikatów Windows
 
 - **Kategoria:** poprawka techniczna / obsługa zasobów, bez przypisanego CVE/GO/GHSA.
 - **Stan przed:** `go vet` zgłaszał `possible misuse of unsafe.Pointer` w `truststore_windows.go`.
@@ -98,7 +98,7 @@ Ta sekcja jest celowo **niezamknięta**; zostanie opracowana na podstawie wpisó
 - **Ograniczenie:** nie przeprowadzono testów funkcjonalnych instalacji i usuwania certyfikatów w magazynie Windows.
 - **Status:** scalono i zweryfikowano statycznie; nie ogłaszamy usunięcia konkretnego CVE.
 
-### 002 — 2026-10-24 — plan rozwoju QuestLab Cert 1.0
+### 002 — plan rozwoju QuestLab Cert 1.0
 
 - **Kategoria:** dokumentacja i organizacja prac.
 - **Stan przed:** brak zatwierdzonego planu QuestLab Cert 1.0.
@@ -107,9 +107,9 @@ Ta sekcja jest celowo **niezamknięta**; zostanie opracowana na podstawie wpisó
 - **Kontrole:** przejrzano dokument przed scaleniem.
 - **Status:** scalono; nie jest to usunięcie podatności.
 
-<!-- Następny zweryfikowany i scalony zakres otrzymuje nagłówek ### 003 — RRRR-MM-DD — ... na KOŃCU dokumentu. Sam audyt, przed jego scaleniem, pozostaje wyłącznie w rejestrze ustaleń. -->
+<!-- Następny zweryfikowany i scalony zakres otrzymuje nagłówek ### NNN — opis zmiany (NNN to kolejny numer) na KOŃCU dokumentu. Sam audyt, przed jego scaleniem, pozostaje wyłącznie w rejestrze ustaleń. -->
 
-### 003 — 2026-10-24 — aktualizacja lokalnego środowiska Go do 1.27.3
+### 003 — aktualizacja lokalnego środowiska Go do 1.27.3
 
 - **Kategoria:** lokalne środowisko kompilacji / weryfikacja bezpieczeństwa; ustalenie B09.
 - **Stan przed:** lokalne Go 1.27.0; `govulncheck` zgłaszał trzy podatności z osiągalnymi wywołaniami: GO-2026-6809, GO-2026-5970 oraz GO-2026-5026.
@@ -119,7 +119,7 @@ Ta sekcja jest celowo **niezamknięta**; zostanie opracowana na podstawie wpisó
 - **Commit / PR:** nie wskazano dla aktualizacji lokalnego środowiska.
 - **Status i ograniczenie:** GO-2026-6809 nie jest zgłaszana w ponownym skanie lokalnym. Nie uznajemy jej za usuniętą ze wszystkich przyszłych wydań programu; wymaga to osobnej weryfikacji środowiska kompilacji i wynikowych artefaktów. GO-2026-5970 i GO-2026-5026 pozostają otwarte.
 
-### 004 — 2026-10-24 — aktualizacja zależności Go i końcowa kontrola bezpieczeństwa
+### 004 — aktualizacja zależności Go i końcowa kontrola bezpieczeństwa
 
 - **Kategoria:** zależności / weryfikacja bezpieczeństwa; ustalenie B08.
 - **Stan przed:** po aktualizacji lokalnego Go opisanej we wpisie 003 pozostawały dwie podatności z osiągalnymi wywołaniami (GO-2026-5970 i GO-2026-5026) oraz 49 dodatkowych zgłoszeń modułowych bez wskazanych osiągalnych wywołań.
@@ -132,7 +132,7 @@ Ta sekcja jest celowo **niezamknięta**; zostanie opracowana na podstawie wpisó
 - **Commit / PR:** nie wykonano commit ani push; nie wskazano PR dla tego wpisu.
 - **Status:** wymagane końcowe kontrole lokalne zakończone powodzeniem. Brak plików testowych nie jest potwierdzeniem pokrycia funkcji testami; nie deklarujemy zakończenia etapu 0 ani weryfikacji wszystkich przyszłych wydań.
 
-### 005 — 2026-10-24 — pierwszy zestaw testów jednostkowych
+### 005 — pierwszy zestaw testów jednostkowych
 
 - **Kategoria:** testy bazowe / częściowa realizacja M01.
 - **Stan przed:** brak plików testowych; `go test` zgłaszał `[no test files]`.
@@ -140,7 +140,7 @@ Ta sekcja jest celowo **niezamknięta**; zostanie opracowana na podstawie wpisó
 - **Kontrole:** na Windows AMD64 z Go 1.27.3 wykonano `go test -v ./...` — wszystkie przypadki przeszły; `go test -race ./...` — poprawnie, bez wykrytych wyścigów; `go vet ./...` — bez ostrzeżeń. Wszystkie kontrole zwróciły kod 0. Poprawnie zakończyły się również `go mod verify`, kompilacje Windows AMD64 i Linux AMD64 oraz `git diff --check`.
 - **Status i ograniczenia:** zestaw zatwierdzono. Testy wykonano na Windows; Linux sprawdzono wyłącznie przez kompilację krzyżową, bez uruchamiania testów na Linux. Jest to pierwszy zestaw bazowy, bez deklaracji pełnego pokrycia kodu ani zamknięcia M01. Nie zmieniono logiki aplikacji; numery seryjne nadal mogą wynosić zero.
 
-### 006 — 2026-10-24 — ochrona zapisu PEM przed nadpisaniem
+### 006 — ochrona zapisu PEM przed nadpisaniem
 
 - **Kategoria:** bezpieczeństwo zapisu plików / częściowa realizacja B03.
 - **Stan przed:** zapis PEM mógł nadpisać istniejący certyfikat lub klucz, a błąd drugiego zapisu pozostawić niekompletną parę.
@@ -148,7 +148,7 @@ Ta sekcja jest celowo **niezamknięta**; zostanie opracowana na podstawie wpisó
 - **Kontrole:** `go test ./...` i `go test -race ./...` zakończone powodzeniem na Windows AMD64 z Go 1.27.3; `go vet ./...` bez ostrzeżeń. Testy obejmują odmowę nadpisania, zachowanie istniejących plików, wycofanie po błędzie drugiego zapisu i jednoczesne tworzenie tego samego pliku. Kompilacje Windows AMD64 i krzyżowa Linux AMD64 oraz `git diff --check` zakończyły się poprawnie. Wszystkie kontrole zwróciły kod 0; testów nie uruchamiano na Linux.
 - **Status i ograniczenia:** poprawkę zatwierdzono; B03 pozostaje częściowo otwarte. Tworzenie CA i eksport PFX pozostają poza zakresem. Wycofywanie po obsłużonym błędzie nie zapewnia atomowej transakcji pary plików odpornej na nagłe przerwanie procesu.
 
-### 007 — 2026-10-24 — usunięcie niezamierzonego tworzenia CA (B04)
+### 007 — usunięcie niezamierzonego tworzenia CA (B04)
 
 - **Kategoria:** poprawność obsługi CLI / naprawa B04.
 - **Stan przed:** odczyt CA mógł utworzyć nowy CA podczas `-uninstall` lub przed wykryciem błędnych danych wejściowych.
@@ -156,7 +156,7 @@ Ta sekcja jest celowo **niezamknięta**; zostanie opracowana na podstawie wpisó
 - **Kontrole:** regresje CLI obejmują brak CA podczas usuwania, zachowanie istniejących plików, błędne argumenty, nazwy i CSR oraz poprawne generowanie i ponowne użycie testowego CA, SAN i zgodność klucza z certyfikatem. `go test ./...`, końcowe `go test -count=1 ./...` i `go vet ./...` zakończyły się kodem 0 na Windows AMD64 z Go 1.27.3. Przeprowadzone kompilacje Windows AMD64 i krzyżowa Linux AMD64 oraz `git diff --check` również zakończyły się kodem 0.
 - **Status i ograniczenia:** B04 naprawiono w opisanym zakresie; końcowy przegląd diff nie wymagał rozbudowy implementacji ani testów. Testy używają katalogów tymczasowych i wyłączonych magazynów zaufania. Testów nie uruchamiano na Linux; kompilacja krzyżowa nie potwierdza działania na tym systemie. Nie zmieniano reguł walidacji nazw ani pozostałych funkcjonalności.
 
-### 008 — 2026-10-24 — identyfikacja QuestLab Cert i obsługa języków PL/EN
+### 008 — identyfikacja QuestLab Cert i obsługa języków PL/EN
 
 - **Kategoria:** pierwszy zakres etapu 1 — nazwa programu i interfejs CLI.
 - **Co zrobił QuestLab:** wprowadzono nazwę QuestLab Cert w pomocy, informacji o wersji i komunikatach CLI, pełną pomoc angielską i polską oraz `-lang=en` i `-lang=pl`. Domyślny jest angielski; wybór dotyczy tylko bieżącego uruchomienia, bez wykrywania języka systemu i zapisywania preferencji. Nieobsługiwany język powoduje czytelny błąd z dozwolonymi kodami. Zachowano dotychczasowe parametry i alias pomocy `-h`.
@@ -164,7 +164,7 @@ Ta sekcja jest celowo **niezamknięta**; zostanie opracowana na podstawie wpisó
 - **Kontrole:** `go test ./...` i `go vet ./...` oraz kompilacje Windows AMD64 i krzyżowa Linux AMD64 zakończyły się kodem 0 na Go 1.27.3. Sprawdzono pomoc domyślną, jawną EN i PL, błędy parametrów i języka, wersję oraz brak utrwalania języka. Testy B03 i B04 przeszły, w tym ochronę istniejących plików i brak tworzenia CA przy odrzuconych operacjach. Generowanie w obu językach nie zmienia istniejącego testowego CA ani jego klucza.
 - **Zakres i ograniczenia:** nie zmieniono modułu Go, lokalizacji CA, danych i identyfikatorów certyfikatów, autorów mkcert ani licencji BSD-3-Clause. Nie dodano menu ani kreatora i nie oznaczono całego etapu 1 jako ukończonego. Testy wykonano na Windows z danymi tymczasowymi i wyłączonymi magazynami zaufania; Linux sprawdzono tylko przez kompilację krzyżową.
 
-### 009 — 2026-10-24 — proste menu konsolowe PL/EN
+### 009 — proste menu konsolowe PL/EN
 
 - **Kategoria:** kolejny zakres etapu 1 — menu bez argumentów lub z samym `-lang`.
 - **Co zrobił QuestLab:** dodano menu w domyślnym EN i w PL po `-lang=pl`: generowanie certyfikatu HTTPS, istniejąca pomoc i zakończenie przez 0 (również 3). Generowanie przyjmuje jedną nazwę DNS lub adres IP, pokazuje podsumowanie ścieżek i formatu PEM oraz wymaga jawnego potwierdzenia; domyślna odpowiedź oznacza odmowę.
@@ -172,35 +172,35 @@ Ta sekcja jest celowo **niezamknięta**; zostanie opracowana na podstawie wpisó
 - **Kontrole:** `go test ./...`, `go vet ./...` oraz kompilacje Windows AMD64 i krzyżowa Linux AMD64 zakończyły się kodem 0 na Go 1.27.3. Testy menu obejmują EN/PL, pomoc, wyjście, błędne dane, odmowę i EOF bez zapisu oraz potwierdzone generowanie PEM i ponowne użycie testowego CA. Regresje CLI, B03 i B04 przechodzą; testy korzystają z katalogów tymczasowych i wyłączonych magazynów zaufania. `git diff --check` bez błędów.
 - **Ograniczenia:** testy wykonano na Windows; Linux sprawdzono tylko przez kompilację krzyżową. Menu obejmuje pojedynczą tożsamość DNS/IP; nie jest pełnym kreatorem etapu 2 ani bezpiecznym eksportem PFX z etapu 3.
 
-### 010 — 2026-10-24 — katalog zapisu certyfikatów menu
+### 010 — katalog zapisu certyfikatów menu
 
 - **Co zrobił QuestLab:** menu zapisuje PEM w dynamicznie ustalanym katalogu domowym użytkownika `QuestLab-Cert/certificates`. Przed potwierdzeniem pokazuje pełne ścieżki certyfikatu i klucza; katalog tworzy dopiero po zgodzie. Zachowano PL/EN, ochronę przed nadpisaniem i wycofanie niekompletnej pary PEM. Tradycyjne CLI nadal domyślnie zapisuje w katalogu roboczym.
 - **Ochrona Git:** dodano `.gitignore` dla certyfikatów, kluczy i pakietów PEM/KEY/CRT/CER/DER/P12/PFX oraz katalogu wyjściowego menu. `git check-ignore` potwierdził działanie reguł także dla wielkich liter i podkatalogów; w śledzonych plikach nie znaleziono tych rozszerzeń.
 - **Kontrole:** `go test ./...`, końcowe `go test -count=1 ./...`, `go vet ./...` oraz kompilacje Windows AMD64 i krzyżowa Linux AMD64 zakończyły się kodem 0. Testy obejmują ścieżki w katalogu domowym, anulowanie bez zapisu, generowanie PL/EN, odmowę nadpisania certyfikatu lub klucza i zachowanie domyślnego zapisu CLI; regresje B03/B04 przechodzą. Testy wykonano na Windows z danymi tymczasowymi i wyłączonymi magazynami zaufania; Linux sprawdzono wyłącznie przez kompilację krzyżową.
 - **Zakres:** nie zmieniono lokalizacji CA, kryptografii, eksportu PFX, zależności ani obsługi magazynów zaufania.
 
-### 011 — 2026-10-24 — instrukcja HTTPS dla Apache 2.4 na Ubuntu/Debian
+### 011 — instrukcja HTTPS dla Apache 2.4 na Ubuntu/Debian
 
 - **Co zrobił QuestLab:** po udanym wygenerowaniu PEM menu opcjonalnie wyświetla krótką instrukcję EN/PL. Pokazuje rzeczywiste ścieżki certyfikatu i klucza serwera, ich przeniesienie do `/etc/ssl/certs/questlab-cert.pem` i `/etc/ssl/private/questlab-cert-key.pem` (klucz z uprawnieniami 600), VirtualHost na porcie 443, włączenie SSL i witryny, kontrolę konfiguracji oraz przeładowanie Apache.
 - **Bezpieczeństwo i zgodność:** sprawdzono zgodność ścieżek docelowych z `SSLCertificateFile` i `SSLCertificateKeyFile`. Instrukcja wyjaśnia właściwą nazwę DNS/IP zamiast zdalnego użycia `localhost` i ustanowienie zaufania do publicznego `rootCA.pem` na kliencie; wyraźnie zabrania kopiowania lub udostępniania `rootCA-key.pem`. Program jedynie wyświetla kroki, bez automatycznej konfiguracji serwera lub magazynów zaufania. Nie zmieniono generowania certyfikatów ani klasycznego CLI.
 - **Kontrole:** `go test ./...`, końcowe `go test -count=1 ./...`, `go vet ./...` oraz kompilacje Windows AMD64 i krzyżowa Linux AMD64 zakończyły się kodem 0. Testy obejmują instrukcję EN/PL, ścieżki, DNS/IPv4/IPv6, ostrzeżenie o kluczu CA, odmowę i EOF oraz brak instrukcji przed udanym generowaniem i w klasycznym CLI. Testy wykonano na Windows; Linux sprawdzono wyłącznie przez kompilację krzyżową.
 - **Ograniczenie:** instrukcja nie została jeszcze przetestowana na działającym serwerze Apache; poprawność wyświetlania i kompilacja nie zastępują tego sprawdzenia.
 
-### 012 — 2026-10-24 — instrukcje HTTPS dla Nginx i IIS
+### 012 — instrukcje HTTPS dla Nginx i IIS
 
 - **Co zrobił QuestLab:** po wygenerowaniu PEM menu oferuje Apache, Nginx, IIS i powrót w EN/PL. Wykorzystano dotychczasowe wyświetlanie instrukcji i wspólne kroki zaufania klienta. Nginx otrzymał przykład portu 443, ścieżki PEM, ochronę klucza, `nginx -t` i przeładowanie. IIS otrzymał opis PFX, importu do `Cert:\LocalMachine\My` z niewidocznym hasłem, powiązania HTTPS, wyboru certyfikatu oraz DNS/SNI lub osobnego powiązania IP.
 - **Bezpieczeństwo:** instrukcje rozróżniają generowanie certyfikatu i zaufanie przeglądarki, wskazują publiczny `rootCA.pem` do importu na kliencie i zabraniają kopiowania prywatnego klucza CA. IIS wyraźnie ostrzega przed obecnym eksportem PFX ze stałym hasłem `changeit` i starszymi algorytmami; opisany import dotyczy wyłącznie PFX przygotowanego osobno zweryfikowanym narzędziem. B01/B02 pozostają otwarte. Nie zmieniono generowania, PFX ani klasycznego CLI; nie instalowano ani nie konfigurowano usług lub magazynów zaufania.
 - **Weryfikacja instrukcji:** sprawdzono oficjalną dokumentację [HTTPS Nginx](https://nginx.org/en/docs/http/configuring_https_servers.html), [kontroli konfiguracji Nginx](https://nginx.org/en/docs/switches.html), [powiązań IIS](https://learn.microsoft.com/en-us/iis/configuration/system.applicationhost/sites/site/bindings/binding), [importu PFX](https://learn.microsoft.com/en-us/powershell/module/pki/import-pfxcertificate) i [magazynów Windows](https://learn.microsoft.com/en-us/windows-server/identity/ad-cs/inspect-certificates-manage-certificate-stores).
 - **Kontrole i ograniczenia:** `go test ./...`, `go vet ./...`, kompilacje Windows AMD64 i krzyżowa Linux AMD64 oraz `git diff --check` zakończyły się kodem 0. Testy wyświetlania obejmują EN/PL, wybór serwerów, powrót, EOF, błędny wybór, ścieżki, DNS/IP, ostrzeżenie PFX i wspólne zaufanie klienta. Testy wykonano na Windows z danymi tymczasowymi i wyłączonymi magazynami zaufania. Nie wykonano testów integracyjnych na działających Apache, Nginx ani IIS; kompilacja krzyżowa nie jest testem działania na Linux.
 
-### 013 — 2026-10-24 — bezpieczny eksport PFX (B01/B02)
+### 013 — bezpieczny eksport PFX (B01/B02)
 
 - **Co zrobił QuestLab:** SSLMate PKCS#12 `v0.7.4` zastępuje `v0.2.0`; eksport jawnie używa `Modern2023` (PBES2/PBKDF2-HMAC-SHA-256, AES-256-CBC, MAC SHA-256). Dodano `x/term v0.47.0` i `x/sys v0.49.0`; pozostałe wersje zależności i minimalne Go bez zmian.
 - **Ochrona:** zamiast stałego hasła wymagane są hasło użytkownika i potwierdzenie bez echa, przed tworzeniem CA, bez przekazywania hasła przez CLI, logi, środowisko lub potok. PFX nie nadpisuje plików; używa 0600 na Unix oraz chronionej i weryfikowanej DACL bieżącego użytkownika na Windows. Eksportuje klucz serwera, nigdy prywatny klucz CA. PEM i menu bez PFX zachowano.
 - **Przegląd i kontrole:** bez dalszej rozbudowy kodu. Testy odczytu RSA/ECDSA, parametrów ASN.1, hasła, odmowy nadpisania i ACL Windows przeszły. W terminalu potwierdzono brak CA i plików przy pustym haśle, niezgodnym potwierdzeniu i przerwaniu procesu przed zatwierdzeniem. Końcowe `go test -count=1 ./...`, `go vet ./...`, kompilacje Windows AMD64 i krzyżowa Linux AMD64 oraz `git diff --check` — kod 0. `govulncheck v1.9.0` Windows/Linux: 0 osiągalnych podatności; pozostaje modułowe GO-2026-5932 bez wskazanego wywołania.
 - **Status i ograniczenia:** B01/B02 poprawiono w opisanym zakresie lokalnym. Import PFX na rzeczywistym IIS oraz działanie programu i testów na Linux wymagają późniejszych testów; kompilacja krzyżowa i analiza statyczna ich nie zastępują.
 
-### 014 — 2026-10-24 — wybór PEM/PFX w menu PL/EN
+### 014 — wybór PEM/PFX w menu PL/EN
 
 - **Co zrobił QuestLab:** dodano wybór domyślnego PEM (Apache/Nginx), PFX (IIS) lub powrotu, z podsumowaniem i potwierdzeniem w EN/PL. PFX trafia do katalogu domowego `QuestLab-Cert/certificates`; instrukcja IIS pokazuje rzeczywistą ścieżkę pakietu. Zachowano tradycyjne CLI i istniejącą kryptografię.
 - **Bezpieczeństwo:** wykorzystano Modern2023 i ochronę zapisu z B01/B02. Hasło PFX pobierane jest raz z wymaganym potwierdzeniem, bez echa i bez przejmowania go przez bufor menu. Błąd hasła następuje przed tworzeniem katalogów i CA; istniejące pliki nie są nadpisywane. Nie instaluje się automatycznie zaufania.

@@ -9,3 +9,11 @@ Adam Shannon
 Chad Retz
 Travis Campbell
 Carl Henrik Lunde
+
+# QuestLab Cert development and adaptation
+#
+# QuestLab develops and adapts the original mkcert project.
+# The original mkcert code remains attributed to its original authors above.
+# QuestLab Cert retains the BSD-3-Clause license; see LICENSE.
+
+Mariusz Smółka - QuestLab (https://questlab.pl)
