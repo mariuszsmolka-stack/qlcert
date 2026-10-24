@@ -70,16 +70,35 @@ func runMenu(input io.Reader, output io.Writer) error {
 				return fmt.Errorf(tr("failed to create certificate directory %q: %w"), certDir, err)
 			}
 			m.Run([]string{host})
-			fmt.Fprint(output, tr("Show Apache 2.4 instructions for Ubuntu/Debian? [y/N]: "))
-			if !scanner.Scan() {
-				return scanner.Err()
-			}
-			switch strings.ToLower(strings.TrimSpace(scanner.Text())) {
-			case "y", "yes", "t", "tak":
-				printApacheInstructions(output, host, m.certFile, m.keyFile, filepath.Join(m.CAROOT, rootName))
+			if err := showHTTPSInstructions(scanner, output, host, m.certFile, m.keyFile, filepath.Join(m.CAROOT, rootName)); err != nil {
+				return err
 			}
 		default:
 			fmt.Fprintln(output, tr("Invalid option. Choose 1, 2 or 0."))
+		}
+	}
+}
+
+func showHTTPSInstructions(scanner *bufio.Scanner, output io.Writer, host, certPath, keyPath, caPath string) error {
+	for {
+		fmt.Fprintln(output, tr("\nHTTPS setup instructions"))
+		fmt.Fprintln(output, "1. Apache\n2. Nginx\n3. IIS")
+		fmt.Fprintln(output, tr("4. Back"))
+		fmt.Fprint(output, tr("Choose an option: "))
+		if !scanner.Scan() {
+			return scanner.Err()
+		}
+		switch strings.TrimSpace(scanner.Text()) {
+		case "1":
+			printApacheInstructions(output, host, certPath, keyPath, caPath)
+		case "2":
+			printNginxInstructions(output, host, certPath, keyPath, caPath)
+		case "3":
+			printIISInstructions(output, host, certPath, keyPath, caPath)
+		case "4":
+			return nil
+		default:
+			fmt.Fprintln(output, tr("Invalid option. Choose 1, 2, 3 or 4."))
 		}
 	}
 }

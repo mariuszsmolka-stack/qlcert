@@ -32,12 +32,21 @@ sudo install -o root -g root -m 600 server-key.pem /etc/ssl/private/questlab-cer
 	fmt.Fprintln(output, `sudo a2enmod ssl
 sudo a2ensite questlab-https.conf
 sudo apache2ctl configtest && sudo systemctl reload apache2`)
+	printClientTrustInstructions(output, host, caPath)
+}
+
+func printClientTrustInstructions(output io.Writer, host, caPath string) {
+	serverName := host
+	if strings.Contains(host, ":") {
+		serverName = "[" + host + "]"
+	}
+	fmt.Fprintln(output, tr("Generating a certificate does not make browsers trust it. The client must trust the local CA (the authority that signed it)."))
 	fmt.Fprintln(output, tr("5. On EACH client, trust the public CA certificate from:"))
 	fmt.Fprintln(output, "  "+caPath)
 	fmt.Fprintln(output, tr("Copy ONLY rootCA.pem from this CA to the client. NEVER copy or share rootCA-key.pem (the private CA key). On an Ubuntu/Debian client with ca-certificates installed, from the directory containing rootCA.pem run:"))
 	fmt.Fprintln(output, `sudo install -o root -g root -m 644 rootCA.pem /usr/local/share/ca-certificates/questlab-rootCA.crt
 sudo update-ca-certificates`)
-	fmt.Fprintln(output, tr("On Windows, import rootCA.pem into Trusted Root Certification Authorities for the current user. If the browser uses a separate trust store (e.g. Firefox), import the public CA there as well and allow it to identify websites. Restart the browser."))
-	fmt.Fprintf(output, tr("Open %s on the client; check that the page loads without a certificate warning. The server must be reachable on TCP 443. QuestLab Cert only displays these steps; it does not configure Apache or install trust."), "https://"+serverName+"/")
+	fmt.Fprintln(output, tr("On Windows, run certmgr.msc: Trusted Root Certification Authorities > Certificates > All Tasks > Import; select rootCA.pem (All Files) for the current user. If the browser uses a separate trust store (e.g. Firefox), import the public CA there as well and allow it to identify websites. Restart the browser."))
+	fmt.Fprintf(output, tr("Open %s on the client; check that the page loads without a certificate warning. The server must be reachable on TCP 443. QuestLab Cert only displays these steps; it does not configure services or install trust."), "https://"+serverName+"/")
 	fmt.Fprintln(output)
 }
