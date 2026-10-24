@@ -69,8 +69,10 @@ Options:
   -ecdsa
       Use an ECDSA key instead of the default RSA key.
   -pkcs12
-      Export a legacy PKCS#12 (.p12/.pfx) bundle containing the certificate,
+      Export a Modern2023 PKCS#12 (.p12/.pfx) bundle containing the certificate,
       its private key and the CA certificate instead of separate PEM files.
+      Requires a password entered twice without echo in an interactive terminal.
+      Existing PFX files are not overwritten. Never pass a password as an argument.
   -csr FILE
       Sign a PEM certificate signing request. Cannot be combined with names,
       -pkcs12, -ecdsa or -client. Supports -install and -cert-file.
@@ -119,8 +121,10 @@ Opcje:
   -ecdsa
       Użyj klucza ECDSA zamiast domyślnego klucza RSA.
   -pkcs12
-      Eksportuj starszy format PKCS#12 (.p12/.pfx) z certyfikatem, jego kluczem
+      Eksportuj PKCS#12 Modern2023 (.p12/.pfx) z certyfikatem, jego kluczem
       prywatnym i certyfikatem CA zamiast osobnych plików PEM.
+      Wymaga dwukrotnego podania hasła bez echa w interaktywnym terminalu.
+      Nie nadpisuje PFX. Nigdy nie podawaj hasła jako argumentu.
   -csr PLIK
       Podpisz żądanie certyfikatu w formacie PEM. Nie można łączyć z nazwami,
       -pkcs12, -ecdsa ani -client. Obsługuje -install i -cert-file.

@@ -4,8 +4,10 @@ go 1.26.0
 
 require (
 	golang.org/x/net v0.61.0
+	golang.org/x/sys v0.49.0
+	golang.org/x/term v0.47.0
 	howett.net/plist v1.0.0
-	software.sslmate.com/src/go-pkcs12 v0.2.0
+	software.sslmate.com/src/go-pkcs12 v0.7.4
 )
 
 require (

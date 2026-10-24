@@ -19,7 +19,7 @@ func TestHTTPSInstructionSelection(t *testing.T) {
 		}{
 			{"apache", "1\n4\n", "lab.test", []string{"Apache 2.4 HTTPS", "SSLCertificateKeyFile /etc/ssl/private/questlab-cert-key.pem"}},
 			{"nginx", "2\n4\n", "lab.test", []string{"Nginx HTTPS", "listen 443 ssl;", "server_name lab.test;", "ssl_certificate /etc/ssl/certs/questlab-cert.pem;", "ssl_certificate_key /etc/ssl/private/questlab-cert-key.pem;", "-m 600 server-key.pem /etc/ssl/private/questlab-cert-key.pem", "sudo nginx -t && sudo systemctl reload nginx"}},
-			{"iis_dns", "3\n4\n", "lab.test", []string{"IIS HTTPS", "B01/B02", "changeit", "Import-PfxCertificate -FilePath 'C:\\Certificates\\server.pfx'", "Cert:\\LocalMachine\\My", "-AsSecureString", "certlm.msc", "inetmgr", "SNI", "=lab.test"}},
+			{"iis_dns", "3\n4\n", "lab.test", []string{"IIS HTTPS", "Modern2023", "changeit", "Import-PfxCertificate -FilePath 'C:\\Certificates\\server.pfx'", "Cert:\\LocalMachine\\My", "-AsSecureString", "certlm.msc", "inetmgr", "SNI", "=lab.test"}},
 			{"iis_ip", "3\n4\n", "192.0.2.1", []string{"IIS HTTPS", "IP 192.0.2.1", "IP:443"}},
 			{"nginx_ipv6", "2\n4\n", "2001:db8::1", []string{"listen [::]:443 ssl;", "https://[2001:db8::1]/"}},
 			{"multiple_and_invalid", "9\n1\n2\n3\n4\n", "lab.test", []string{"1, 2, 3", "Apache 2.4 HTTPS", "Nginx HTTPS", "IIS HTTPS"}},
@@ -39,12 +39,12 @@ func TestHTTPSInstructionSelection(t *testing.T) {
 				if language == "en" {
 					common = append(common, "4. Back", "manual steps", "NEVER copy or share rootCA-key.pem", "does not make browsers trust it", "localhost refers to the client itself")
 					if strings.Contains(tc.input, "3\n") {
-						common = append(common, "Do NOT use that export as a secure solution", "legacy algorithms", "Continue ONLY with that separately prepared PFX")
+						common = append(common, "Do not use older PFX exports", "legacy algorithms", "import into real IIS has not been verified", "Continue ONLY with that separately prepared PFX")
 					}
 				} else {
 					common = append(common, "4. Powrót", "kroki ręczne", "NIGDY nie kopiuj ani nie udostępniaj rootCA-key.pem", "nie oznacza zaufania przeglądarki", "localhost oznacza sam komputer klienta")
 					if strings.Contains(tc.input, "3\n") {
-						common = append(common, "NIE używaj tego eksportu jako bezpiecznego rozwiązania", "starszymi algorytmami", "Kontynuuj WYŁĄCZNIE z tak przygotowanym osobno PFX")
+						common = append(common, "Nie używaj dawnych eksportów PFX", "starszymi algorytmami", "importu w rzeczywistym IIS nie zweryfikowano", "Kontynuuj WYŁĄCZNIE z tak przygotowanym osobno PFX")
 					}
 				}
 				for _, want := range append(common, tc.want...) {

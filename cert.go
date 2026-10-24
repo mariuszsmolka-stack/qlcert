@@ -28,8 +28,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	pkcs12 "software.sslmate.com/src/go-pkcs12"
 )
 
 var userAndHostname string
@@ -115,10 +113,11 @@ func (m *mkcert) makeCert(hosts []string) {
 		err = writeCertAndKeyPEM(certFile, keyFile, certPEM, privPEM)
 		fatalIfErr(err, "failed to save certificate and key")
 	} else {
-		domainCert, _ := x509.ParseCertificate(cert)
-		pfxData, err := pkcs12.Encode(rand.Reader, priv, domainCert, []*x509.Certificate{m.caCert}, "changeit")
+		domainCert, err := x509.ParseCertificate(cert)
+		fatalIfErr(err, "failed to parse generated certificate")
+		pfxData, err := encodePFX(priv, domainCert, m.caCert, m.pfxPassword)
 		fatalIfErr(err, "failed to generate PKCS#12")
-		err = ioutil.WriteFile(p12File, pfxData, 0644)
+		err = writePFXFile(p12File, pfxData)
 		fatalIfErr(err, "failed to save PKCS#12")
 	}
 
@@ -132,7 +131,6 @@ func (m *mkcert) makeCert(hosts []string) {
 		}
 	} else {
 		log.Printf(tr("\nThe PKCS#12 bundle is at \"%s\" ✅\n"), p12File)
-		log.Printf("%s", tr("\nThe legacy PKCS#12 encryption password is the often hardcoded default \"changeit\" ℹ️\n\n"))
 	}
 
 	log.Printf(tr("It will expire on %s 🗓\n\n"), displayDate(expiration))

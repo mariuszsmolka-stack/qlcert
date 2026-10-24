@@ -122,6 +122,7 @@ type mkcert struct {
 	pkcs12, ecdsa, client      bool
 	keyFile, certFile, p12File string
 	csrPath                    string
+	pfxPassword                []byte
 
 	CAROOT string
 	caCert *x509.Certificate
@@ -163,6 +164,17 @@ func (m *mkcert) Run(args []string) {
 	var csr *x509.CertificateRequest
 	if m.csrPath != "" && !m.uninstallMode {
 		csr = readCSR(m.csrPath)
+	}
+	if m.pkcs12 && !m.uninstallMode && len(args) > 0 {
+		_, _, path := m.fileNames(args)
+		fatalIfErr(checkPFXTarget(path), "cannot export PKCS#12")
+		password, err := promptPFXPassword(os.Stdin, os.Stderr)
+		fatalIfErr(err, "cannot export PKCS#12")
+		m.pfxPassword = password
+		defer func() {
+			clear(m.pfxPassword)
+			m.pfxPassword = nil
+		}()
 	}
 
 	m.CAROOT = getCAROOT()
